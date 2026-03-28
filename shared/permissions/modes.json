@@ -1,0 +1,196 @@
+{
+  "_comment": "TriSystem permission mode presets. The active mode is set in opencode.json under 'trisystem_permission_mode'.",
+  "_usage": "Select a mode at init time. To change later, update 'trisystem_permission_mode' in opencode.json and apply the corresponding 'permission' block.",
+
+  "modes": {
+    "autonomous": {
+      "_description": "Fully autonomous. All operations run without prompts, including git push and deployment. The scope-guard safety net is maximally permissive. Use when you trust the full agent pipeline and want zero interruptions.",
+      "permission": {
+        "*": "allow",
+        "doom_loop": "ask"
+      },
+      "scope_guard": {
+        "blocked_commands": [],
+        "comment": "No commands are hard-blocked. All git operations, including git push, are allowed."
+      },
+      "agent_overrides": {
+        "git-manager": {
+          "bash": "allow",
+          "_note": "git push is permitted. The agent may push after QA approval."
+        },
+        "deployer": {
+          "bash": "allow",
+          "_note": "Deployment commands run without approval."
+        },
+        "developer": {
+          "edit": "allow",
+          "bash": "allow"
+        }
+      }
+    },
+
+    "supervised": {
+      "_description": "Default recommended mode. Most operations run automatically, but git push, git commit, and deployment commands require approval. Destructive bash is blocked by the scope-guard. Suitable for normal development with human checkpoints on irreversible actions.",
+      "permission": {
+        "*": "allow",
+        "doom_loop": "ask",
+        "bash": {
+          "*": "allow",
+          "rm -rf *": "ask",
+          "git push *": "ask",
+          "git push": "ask",
+          "shutdown *": "deny",
+          "reboot *": "deny",
+          "mkfs *": "deny",
+          "dd if=*": "deny"
+        }
+      },
+      "scope_guard": {
+        "blocked_commands": [
+          "/(^|\\s)rm\\s+-rf\\s+\\/(",
+          "/(^|\\s)shutdown(",
+          "/(^|\\s)reboot(",
+          "/(^|\\s)mkfs(",
+          "/(^|\\s)dd\\s+if="
+        ],
+        "ask_commands": [
+          "/(^|\\s)git\\s+push(\\s|$)/",
+          "/(^|\\s)git\\s+commit(\\s|$)/"
+        ],
+        "comment": "git push and git commit are intercepted for approval. Truly destructive system commands are hard-blocked."
+      },
+      "agent_overrides": {
+        "git-manager": {
+          "bash": {
+            "*": "allow",
+            "git push *": "ask",
+            "git push": "ask"
+          },
+          "_note": "git push requires approval. All other git operations (add, commit, status, diff, log) run freely."
+        },
+        "deployer": {
+          "bash": {
+            "*": "allow",
+            "kubectl delete *": "ask",
+            "helm uninstall *": "ask",
+            "helm upgrade --install *": "ask"
+          },
+          "_note": "Destructive and apply deployment commands require approval."
+        },
+        "developer": {
+          "edit": "allow",
+          "bash": "allow"
+        }
+      }
+    },
+
+    "guarded": {
+      "_description": "Conservative mode. Reads and searches run freely. All file writes, bash commands, and git operations require explicit approval. Good for reviewing what the agent plans to do before it does it.",
+      "permission": {
+        "*": "ask",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "webfetch": "allow",
+        "doom_loop": "ask"
+      },
+      "scope_guard": {
+        "blocked_commands": [
+          "/(^|\\s)rm\\s+-rf\\s+\\/(",
+          "/(^|\\s)shutdown(",
+          "/(^|\\s)reboot(",
+          "/(^|\\s)mkfs(",
+          "/(^|\\s)dd\\s+if="
+        ],
+        "ask_commands": "all",
+        "comment": "All bash commands require approval except reads. Truly destructive system commands are hard-blocked regardless."
+      },
+      "agent_overrides": {
+        "git-manager": {
+          "bash": "ask",
+          "_note": "Every git command requires approval."
+        },
+        "deployer": {
+          "bash": "ask",
+          "_note": "Every deployment command requires approval."
+        },
+        "developer": {
+          "edit": "ask",
+          "bash": "ask"
+        },
+        "document-analyzer": {
+          "edit": "deny",
+          "bash": "allow",
+          "_note": "Read-only agent; no writes needed."
+        },
+        "official-docs-researcher": {
+          "edit": "deny",
+          "_note": "Read-only agent; no writes needed."
+        },
+        "project-architect": {
+          "edit": "deny",
+          "_note": "Read-only agent; no writes needed."
+        },
+        "context-curator": {
+          "bash": "allow",
+          "_note": "Only writes memory files, which is harmless."
+        },
+        "reviewer": {
+          "edit": "deny",
+          "bash": "allow",
+          "_note": "Review is read-only by design."
+        },
+        "security-auditor": {
+          "edit": "deny",
+          "bash": "allow",
+          "_note": "Audit is read-only by design."
+        }
+      }
+    },
+
+    "locked": {
+      "_description": "Read-only analysis mode. No writes, no bash, no git. Only exploration, planning, and documentation generation. Use for audits, onboarding, or understanding a codebase without risking any changes.",
+      "permission": {
+        "*": "deny",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "webfetch": "allow",
+        "task": "allow",
+        "skill": "allow"
+      },
+      "scope_guard": {
+        "blocked_commands": "all",
+        "comment": "All bash commands are blocked. The scope-guard is a secondary safety net; OpenCode permissions are the primary block."
+      },
+      "agent_overrides": {
+        "git-manager": {
+          "edit": "deny",
+          "bash": "deny",
+          "_note": "No git operations in locked mode."
+        },
+        "deployer": {
+          "edit": "deny",
+          "bash": "deny",
+          "_note": "No deployment operations in locked mode."
+        },
+        "developer": {
+          "edit": "deny",
+          "bash": "deny",
+          "_note": "Implementation is disabled. Developer can only read and analyze."
+        },
+        "tester": {
+          "bash": "deny",
+          "_note": "Tests cannot be run in locked mode."
+        }
+      }
+    }
+  },
+
+  "defaults": {
+    "mode": "supervised",
+    "comment": "The default mode applied when none is specified at init time."
+  }
+}

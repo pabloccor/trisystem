@@ -39,7 +39,8 @@ The wizard will ask:
 2. **Project name** — used as the prefix for your checklist and guide files
 3. **Runtime** — `opencode`, `claude-code`, or `both`
 4. **Template size** — `slim` (starter docs) or `empty` (you'll generate with ChatGPT)
-5. **Cheat sheet** — whether to copy the reference cheat sheet
+5. **Permission mode** — `autonomous`, `supervised` (default), `guarded`, or `locked`
+6. **Cheat sheet** — whether to copy the reference cheat sheet
 
 ---
 
@@ -53,7 +54,8 @@ trisystem/
 ├── shared/                      # Single canonical source (DRY)
 │   ├── agents/                  # 17 specialized agents (runtime-agnostic)
 │   ├── skills/                  # 10 reusable workflow skills
-│   └── rules/                   # 5 always-loaded instruction rules
+│   ├── rules/                   # 5 always-loaded instruction rules
+│   └── permissions/             # Canonical permission mode presets (modes.json)
 │
 ├── opencode/                    # OpenCode-specific runtime files
 │   ├── AGENTS.md.template       # Project operating rules template
@@ -185,6 +187,7 @@ Five rules are always loaded and govern every session:
 ## Design principles
 
 - **KISS and DRY** — shared content lives once in `shared/`; the init script copies it
+- **Permission modes** — four presets (`autonomous`, `supervised`, `guarded`, `locked`) control agent autonomy; see [`docs/permissions.md`](docs/permissions.md)
 - **No hardcoded secrets** — all tokens use `$ENV_VAR` placeholders with `.example` files
 - **No org-specific references** — fully generic, works for any project
 - **Motivation-aware** — task design supports competence-building and autonomy

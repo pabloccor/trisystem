@@ -70,6 +70,112 @@ copy_file() {
   fi
 }
 
+# generate_opencode_json <output_path> <mode>
+# Writes opencode.json with the permission block for the specified mode.
+generate_opencode_json() {
+  local out="$1" mode="$2"
+  mkdir -p "$(dirname "$out")"
+
+  case "$mode" in
+    autonomous)
+      cat > "$out" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    ".opencode/rules/*.md"
+  ],
+
+  "trisystem_permission_mode": "autonomous",
+
+  "permission": {
+    "*": "allow",
+    "doom_loop": "ask"
+  }
+}
+EOF
+      ;;
+    supervised)
+      cat > "$out" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    ".opencode/rules/*.md"
+  ],
+
+  "trisystem_permission_mode": "supervised",
+
+  "permission": {
+    "*": "allow",
+    "doom_loop": "ask",
+    "bash": {
+      "*": "allow",
+      "rm -rf *": "ask",
+      "git push *": "ask",
+      "git push": "ask",
+      "shutdown *": "deny",
+      "reboot *": "deny",
+      "mkfs *": "deny",
+      "dd if=*": "deny"
+    }
+  }
+}
+EOF
+      ;;
+    guarded)
+      cat > "$out" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    ".opencode/rules/*.md"
+  ],
+
+  "trisystem_permission_mode": "guarded",
+
+  "permission": {
+    "*": "ask",
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "webfetch": "allow",
+    "doom_loop": "ask"
+  }
+}
+EOF
+      ;;
+    locked)
+      cat > "$out" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    ".opencode/rules/*.md"
+  ],
+
+  "trisystem_permission_mode": "locked",
+
+  "permission": {
+    "*": "deny",
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "webfetch": "allow",
+    "task": "allow",
+    "skill": "allow"
+  }
+}
+EOF
+      ;;
+    *)
+      warn "Unknown permission mode '$mode', defaulting to supervised."
+      generate_opencode_json "$out" "supervised"
+      return
+      ;;
+  esac
+
+  success "Generated opencode.json (mode: ${mode})"
+}
+
 # ── Banner ────────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}Three-Doc Project Template — Init Wizard${RESET}"
@@ -117,7 +223,25 @@ TEMPLATE_SIZE="$(ask_choice "Template size for source docs?" \
   "empty (no template files — you will generate them with ChatGPT)")"
 echo ""
 
-# ── Step 5: Cheatsheet ────────────────────────────────────────────────────────
+# ── Step 5: Permission mode ───────────────────────────────────────────────────
+echo -e "${CYAN}${BOLD}Permission modes:${RESET}"
+echo "  autonomous  — Full autonomy including git push. Zero prompts. Best for"
+echo "                trusted pipelines where you want the agent to ship on its own."
+echo "  supervised  — (Recommended) Most ops run freely; git push and deployment"
+echo "                commands require approval. Truly destructive cmds blocked."
+echo "  guarded     — Reads run freely; all writes, bash, and git require approval."
+echo "  locked      — Read-only. No writes, no bash, no git. Analysis mode only."
+echo ""
+PERMISSION_MODE="$(ask_choice "Permission mode?" \
+  "supervised  (recommended — autonomous except git push + deploys)" \
+  "autonomous  (fully autonomous including git push)" \
+  "guarded     (approve every write and bash command)" \
+  "locked      (read-only, no changes)")"
+# Extract just the mode keyword (first word)
+PERMISSION_MODE="$(echo "$PERMISSION_MODE" | awk '{print $1}')"
+echo ""
+
+# ── Step 6: Cheatsheet ────────────────────────────────────────────────────────
 INCLUDE_CHEATSHEET="$(ask_choice "Copy cheat sheet?" \
   "yes" \
   "no")"
@@ -125,11 +249,12 @@ echo ""
 
 # ── Confirm ───────────────────────────────────────────────────────────────────
 echo -e "${BOLD}Summary${RESET}"
-echo "  Target:        $TARGET_DIR"
-echo "  Project name:  $PROJECT_NAME  (prefix: ${PROJECT_PREFIX}_)"
-echo "  Runtime:       $RUNTIME"
-echo "  Template size: $TEMPLATE_SIZE"
-echo "  Cheat sheet:   $INCLUDE_CHEATSHEET"
+echo "  Target:          $TARGET_DIR"
+echo "  Project name:    $PROJECT_NAME  (prefix: ${PROJECT_PREFIX}_)"
+echo "  Runtime:         $RUNTIME"
+echo "  Template size:   $TEMPLATE_SIZE"
+echo "  Permission mode: $PERMISSION_MODE"
+echo "  Cheat sheet:     $INCLUDE_CHEATSHEET"
 echo ""
 read -rp "$(echo -e "${BOLD}Proceed? [Y/n]:${RESET} ")" go
 if [[ ! "${go:-Y}" =~ ^[Yy]$ ]]; then
@@ -171,18 +296,20 @@ if [[ "$RUNTIME" == "opencode" || "$RUNTIME" == "both" ]]; then
   info "Copying OpenCode runtime files..."
   copy_dir  "$TEMPLATE_ROOT/opencode/plugins" "$TARGET_DIR/.opencode/plugins"
 
-  # AGENTS.md — substitute PROJECT_NAME placeholder
+  # AGENTS.md — substitute PROJECT_NAME and PERMISSION_MODE placeholders
   if [[ -f "$TEMPLATE_ROOT/opencode/AGENTS.md.template" ]]; then
     mkdir -p "$TARGET_DIR"
-    sed "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" \
+    sed \
+      -e "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" \
+      -e "s/{{PERMISSION_MODE}}/${PERMISSION_MODE}/g" \
       "$TEMPLATE_ROOT/opencode/AGENTS.md.template" \
       > "$TARGET_DIR/AGENTS.md"
     success "Generated AGENTS.md"
   fi
 
-  # opencode.json
+  # opencode.json — generate with correct permission block for the chosen mode
   if [[ ! -f "$TARGET_DIR/opencode.json" ]]; then
-    copy_file "$TEMPLATE_ROOT/opencode/opencode.json" "$TARGET_DIR/opencode.json"
+    generate_opencode_json "$TARGET_DIR/opencode.json" "$PERMISSION_MODE"
   fi
 
   # package.json for plugins

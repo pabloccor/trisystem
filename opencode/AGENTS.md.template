@@ -12,6 +12,20 @@ The source of truth is in `docs/source-of-truth/`.
 - `*_IMPLEMENTATION_CHECKLIST.md`
 - `*_TECHNICAL_GUIDE.md`
 
+## Permission mode
+
+This project is running in **`{{PERMISSION_MODE}}`** mode.
+
+| Mode | Meaning |
+|---|---|
+| `autonomous` | Fully autonomous including git push. Zero prompts. |
+| `supervised` | Most ops run freely; git push and deployments require approval. |
+| `guarded` | Reads run freely; all writes, bash, and git require approval. |
+| `locked` | Read-only. No writes, no bash, no git. |
+
+To change mode: update `trisystem_permission_mode` in `opencode.json` and replace the
+`permission` block with the corresponding preset from `shared/permissions/modes.json`.
+
 ## Lazy loading rule
 
 These source documents are intentionally large. Do **not** preload them all.
