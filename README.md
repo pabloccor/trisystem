@@ -31,6 +31,9 @@ cd trisystem
 ./scripts/init-project.sh /path/to/your-new-project
 ```
 
+> **📖 Full documentation** — see [`docs/index.md`](docs/index.md) for the complete guide
+> covering agents, skills, rules, plugins, hooks, commands, the task lifecycle, and more.
+
 The wizard will ask:
 1. **Target directory** — where to initialize the project
 2. **Project name** — used as the prefix for your checklist and guide files
