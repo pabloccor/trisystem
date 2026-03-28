@@ -17,26 +17,43 @@ Suggested location: `CHEAT_SHEET_CLAUDE.md` (project root or `.claude/`)
 
 ## Main commands
 
-### 1) Preparation and bootstrap
+### 1) Set up a new project (one-time)
 
 ```bash
-# (optional) create virtualenv
-python3 -m venv .venv
-source .venv/bin/activate
+# Clone the template (temporary — can be deleted after)
+git clone https://github.com/pabloccor/trisystem.git
+cd trisystem
 
-# install deps if present
-pip install -r .claude/requirements.txt  # if present
+# Run the interactive wizard; outputs everything into your new project
+./scripts/init-project.sh /path/to/your-new-project
+# The wizard will ask:
+#   1. Target directory
+#   2. Project name (used as document prefix)
+#   3. Runtime: opencode | claude-code | both
+#   4. Template size: slim (starter docs) | empty (generate with ChatGPT)
+#   5. Cheat sheet: copy yes/no
+
+# The template repo is no longer needed — delete it if you like
+cd ../ && rm -rf trisystem/
+```
+
+### 2) Bootstrap runtime artifacts
+
+```bash
+cd /path/to/your-new-project
+
+# (optional) virtualenv for the bootstrap script
+python3 -m venv .venv && source .venv/bin/activate
 
 # generate runtime artifacts from the 3 source docs
 python3 .claude/bin/bootstrap_three_docs.py --refresh
-# Common options:
 # --refresh     -> overwrite existing artifacts
 # --dry-run     -> validate and show what would be done
 # --outdir PATH -> write to PATH instead of .claude/
 # --verbose     -> extended logs
 ```
 
-### 2) Launch Claude Code
+### 3) Launch Claude Code
 
 ```bash
 # Start a session with the main orchestrator agent
@@ -236,9 +253,12 @@ python .claude/bin/gen_pr_text.py --task P03-S01-T001
 
 ## Minimal usage example (steps)
 
-1. `python3 .claude/bin/bootstrap_three_docs.py --refresh`
-2. `claude --agent main-orchestrator`
-3. `/bootstrap-three-doc-project`
+1. `git clone https://github.com/pabloccor/trisystem.git && cd trisystem`
+2. `./scripts/init-project.sh /path/to/your-new-project` — choose `claude-code` (or `both`)
+3. `cd /path/to/your-new-project`
+4. `python3 .claude/bin/bootstrap_three_docs.py --refresh`
+5. `claude --agent main-orchestrator`
+6. `/bootstrap-three-doc-project`
 4. `list phases`
 5. `inspect task P03-S01-T001`
 6. `claim task P03-S01-T001`
