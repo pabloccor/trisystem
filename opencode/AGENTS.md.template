@@ -1,0 +1,40 @@
+# {{PROJECT_NAME}} — OpenCode operating rules
+
+## Project purpose
+
+{{PROJECT_DESCRIPTION}}
+
+## Authoritative documents
+
+The source of truth is in `docs/source-of-truth/`.
+
+- `instrucciones.md`
+- `*_IMPLEMENTATION_CHECKLIST.md`
+- `*_TECHNICAL_GUIDE.md`
+
+## Lazy loading rule
+
+These source documents are intentionally large. Do **not** preload them all.
+Read only the smallest relevant sections needed for the current task.
+When ambiguity matters, inspect the source docs directly instead of guessing.
+
+## Operating priorities
+
+1. Validate the three-document contract first.
+2. Prefer official documentation before changing stack, APIs, auth, deployment, or AI assistant behavior.
+3. Work in vertical slices: backend + frontend + verification.
+4. Keep runtime artifacts derived and secondary to the source-of-truth docs.
+5. Preserve KISS, DRY, and YAGNI. If a simpler path exists, use it.
+6. Avoid premature multi-provider complexity. Focus on the MVP provider.
+
+## Execution model
+
+- Use `@main-orchestrator` as the top-level coordinator for structured execution.
+- Use project-local commands from `.opencode/commands/` for bootstrap, verification, and phase work.
+- Use skills from `.opencode/skills/` when a reusable workflow already exists.
+- Use plugins under `.opencode/plugins/` for guardrails and traceability.
+
+## Runtime artifacts
+
+Derived execution files under `.claude/memory/` and `.claude/tasks/` are useful runtime state,
+but they are not authoritative when they diverge from the source-of-truth docs.

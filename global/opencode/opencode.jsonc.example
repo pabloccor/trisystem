@@ -1,0 +1,137 @@
+// OpenCode global configuration — example file
+// Copy to: ~/.config/opencode/opencode.jsonc
+// Then fill in YOUR tokens/keys. Do NOT commit real values.
+//
+// Environment variable references use $ENV_VAR syntax.
+// OpenCode expands them from your shell environment at startup.
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // "manual" means you control when sessions are shared; "auto" shares automatically.
+  "share": "manual",
+
+  // Keep a local snapshot of each session.
+  "snapshot": true,
+
+  // -------------------------------------------------------------------------
+  // Provider — uncomment the one you want to use and fill in your credentials.
+  //
+  // Option A: Direct Anthropic API
+  // -------------------------------------------------------------------------
+  // "provider": {
+  //   "anthropic": {
+  //     "apiKey": "$ANTHROPIC_API_KEY"
+  //   }
+  // },
+  // "model": "claude-opus-4-5",
+  // "small_model": "claude-haiku-4-5",
+
+  // -------------------------------------------------------------------------
+  // Option B: GitHub Copilot (if you have Copilot access)
+  // -------------------------------------------------------------------------
+  "provider": {
+    "github-copilot": {}
+  },
+  "model": "github-copilot/claude-sonnet-4.6",
+  "small_model": "github-copilot/claude-haiku-4.5",
+
+  // -------------------------------------------------------------------------
+  // Option C: OpenAI
+  // -------------------------------------------------------------------------
+  // "provider": {
+  //   "openai": {
+  //     "apiKey": "$OPENAI_API_KEY"
+  //   }
+  // },
+  // "model": "gpt-4o",
+
+  // Disable providers you don't use (reduces startup noise)
+  "disabled_providers": [
+    "opencode",
+    "ollama"
+  ],
+
+  // Default agent when starting a new session.
+  // "plan" is the built-in read-only analysis agent.
+  "default_agent": "plan",
+
+  // Permission model: "allow" lets OpenCode work autonomously.
+  // The scope-guard plugin is the safety net instead of per-action prompts.
+  "permission": "allow",
+
+  // Optional third-party plugins from npm
+  // "plugin": [
+  //   "@some-org/opencode-plugin-name"
+  // ],
+
+  // Automatic context compaction when the session grows large
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+
+  // Code formatters — runs automatically after file edits
+  "formatter": {
+    "ruff": {
+      "command": ["ruff", "format", "$FILE"],
+      "extensions": [".py", ".pyi"]
+    },
+    "prettier": {
+      "command": ["prettier", "--write", "$FILE"],
+      "extensions": [".json", ".yaml", ".yml", ".md", ".toml"]
+    },
+    "shfmt": {
+      "extensions": [".sh", ".bash"]
+    }
+  },
+
+  // -------------------------------------------------------------------------
+  // MCP servers — add the ones you need.
+  // Set the corresponding env vars in your shell profile (.zshrc / .bashrc).
+  // -------------------------------------------------------------------------
+  "mcp": {
+    // GitHub — issues, PRs, code review
+    // Set GITHUB_PAT in your shell profile
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer $GITHUB_PAT"
+      },
+      "enabled": true
+    },
+
+    // Context7 — up-to-date library docs
+    // Set CONTEXT7_API_KEY in your shell profile (or use the free tier)
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
+      "enabled": true,
+      "environment": {
+        "CONTEXT7_API_KEY": "$CONTEXT7_API_KEY"
+      }
+    },
+
+    // Playwright — browser automation for testing and scraping
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp@latest"],
+      "enabled": false
+    }
+
+    // Add more MCP servers here as needed.
+    // Examples:
+    //
+    // "sentry": {
+    //   "type": "remote",
+    //   "url": "https://mcp.sentry.dev/mcp",
+    //   "enabled": false
+    // },
+    //
+    // "postgres": {
+    //   "type": "local",
+    //   "command": ["postgres-mcp", "$DATABASE_URL"],
+    //   "enabled": false
+    // }
+  }
+}
