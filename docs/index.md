@@ -27,6 +27,7 @@ Welcome to the TriSystem docs. This is the full reference for the three-doc AI p
 ### Reference
 - [Init wizard](init-wizard.md) — What `scripts/init-project.sh` does and all its options
 - [Permissions](permissions.md) — The four permission modes (`autonomous`, `supervised`, `guarded`, `locked`) and how to configure them
+- [Model tiers](model-tiers.md) — The four cost tiers (`premium`, `standard`, `economy`, `minimal`) and per-agent model assignments
 
 ---
 

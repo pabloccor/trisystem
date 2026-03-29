@@ -26,6 +26,21 @@ This project is running in **`{{PERMISSION_MODE}}`** mode.
 To change mode: update `trisystem_permission_mode` in `opencode.json` and replace the
 `permission` block with the corresponding preset from `shared/permissions/modes.json`.
 
+## Model tier
+
+This project is running on the **`{{MODEL_TIER}}`** cost tier.
+
+| Tier | Orchestrator | High-demand | Medium-demand | Low-demand |
+|---|---|---|---|---|
+| `premium` | opus | opus | sonnet | haiku |
+| `standard` | opus | opus/sonnet | sonnet | haiku |
+| `economy` | opus | sonnet/haiku | haiku | haiku |
+| `minimal` | opus | sonnet/haiku | haiku | haiku |
+
+Each agent's `model:` field was stamped at init time from `shared/models/tiers.json`.
+To change tier: re-run `init-project.sh` or manually update `model:` in each agent file
+under `.opencode/agents/`.
+
 ## Lazy loading rule
 
 These source documents are intentionally large. Do **not** preload them all.
