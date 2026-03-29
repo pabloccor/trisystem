@@ -590,18 +590,73 @@ if [[ -d "$TARGET_DIR/.claude/scripts" ]]; then
   chmod +x "$TARGET_DIR/.claude/scripts/"*.sh 2>/dev/null || true
 fi
 
-# ── .gitignore stub ───────────────────────────────────────────────────────────
+# ── .gitignore ────────────────────────────────────────────────────────────────
 GITIGNORE="$TARGET_DIR/.gitignore"
+
+# Entries that must be present (pattern : comment-label)
+declare -a GITIGNORE_REQUIRED=(
+  ".venv/"
+  "venv/"
+  "env/"
+  "__pycache__/"
+  "*.pyc"
+  "*.pyo"
+  "node_modules/"
+  ".claude/memory/"
+  ".claude/tasks/"
+  ".claude/*.json"
+  ".claude/*.jsonl"
+  ".mcp.json"
+  ".env"
+  ".DS_Store"
+  "Thumbs.db"
+)
+
 if [[ ! -f "$GITIGNORE" ]]; then
   cat > "$GITIGNORE" <<'GITEOF'
+# Python virtual environments
 .venv/
+venv/
+env/
+
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
+
+# Node
 node_modules/
-.claude/tasks/ledger.jsonl
+
+# Agent runtime state (generated per-session — do not commit)
+.claude/memory/
+.claude/tasks/
+.claude/*.json
+.claude/*.jsonl
+.mcp.json
+
+# Environment secrets
 .env
+
+# OS
+.DS_Store
+Thumbs.db
 GITEOF
   success "Created .gitignore"
+else
+  _appended=0
+  for _entry in "${GITIGNORE_REQUIRED[@]}"; do
+    # grep with fixed-string and full-line match so globs don't confuse it
+    if ! grep -qF "$_entry" "$GITIGNORE" 2>/dev/null; then
+      if [[ $_appended -eq 0 ]]; then
+        printf '\n# Agent runtime state (generated per-session — do not commit)\n' >> "$GITIGNORE"
+        _appended=1
+      fi
+      printf '%s\n' "$_entry" >> "$GITIGNORE"
+    fi
+  done
+  if [[ $_appended -gt 0 ]]; then
+    success "Updated .gitignore with missing agent ignore rules"
+  fi
 fi
 
 # ── Done ──────────────────────────────────────────────────────────────────────
