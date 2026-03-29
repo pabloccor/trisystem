@@ -30,10 +30,10 @@ step()    { echo ""; echo -e "${DIM}──────────────�
 ask() {
   local question="$1" default="${2:-}" answer
   if [[ -n "$default" ]]; then
-    read -rp "$(echo -e "${BOLD}${question}${RESET} [${default}]: ")" answer
+    read -rp "$(echo -e "${BOLD}${question}${RESET} [${default}]: ")" answer </dev/tty
     echo "${answer:-$default}"
   else
-    read -rp "$(echo -e "${BOLD}${question}${RESET}: ")" answer
+    read -rp "$(echo -e "${BOLD}${question}${RESET}: ")" answer </dev/tty
     echo "$answer"
   fi
 }
@@ -42,32 +42,31 @@ ask_choice() {
   # ask_choice "question" "keyword|Description line" ...
   # Option format: "keyword|Description shown below the option"
   # If no pipe is present, the whole string is used as keyword with no description.
-  # Returns just the keyword.
+  # Returns just the keyword via stdout; all display goes to /dev/tty.
   local label="$1"; shift
   local options=("$@")
   local i answer keyword desc
-  echo -e "${BOLD}${label}${RESET}"
-  echo ""
+  echo -e "${BOLD}${label}${RESET}" >/dev/tty
+  echo "" >/dev/tty
   for i in "${!options[@]}"; do
     keyword="${options[$i]%%|*}"
     desc="${options[$i]#*|}"
     if [[ "$desc" == "$keyword" ]]; then
-      # No pipe — single-line option
-      echo -e "  ${CYAN}${BOLD}$((i+1)))${RESET} ${BOLD}${keyword}${RESET}"
+      echo -e "  ${CYAN}${BOLD}$((i+1)))${RESET} ${BOLD}${keyword}${RESET}" >/dev/tty
     else
-      echo -e "  ${CYAN}${BOLD}$((i+1)))${RESET} ${BOLD}${keyword}${RESET}"
-      echo -e "     ${DIM}${desc}${RESET}"
+      echo -e "  ${CYAN}${BOLD}$((i+1)))${RESET} ${BOLD}${keyword}${RESET}" >/dev/tty
+      echo -e "     ${DIM}${desc}${RESET}" >/dev/tty
     fi
   done
-  echo ""
+  echo "" >/dev/tty
   while true; do
-    read -rp "$(echo -e "${BOLD}Choice [1-${#options[@]}]:${RESET} ")" answer
+    read -rp "$(echo -e "${BOLD}Choice [1-${#options[@]}]:${RESET} ")" answer </dev/tty
     if [[ "$answer" =~ ^[0-9]+$ ]] && (( answer >= 1 && answer <= ${#options[@]} )); then
       keyword="${options[$((answer-1))]%%|*}"
       echo "$keyword"
       return
     fi
-    warn "Please enter a number between 1 and ${#options[@]}."
+    warn "Please enter a number between 1 and ${#options[@]}." >/dev/tty
   done
 }
 
@@ -78,12 +77,12 @@ ask_yn() {
   local hint
   if [[ "$default" == "y" ]]; then hint="Y/n"; else hint="y/N"; fi
   while true; do
-    read -rp "$(echo -e "${BOLD}${question}${RESET} [${hint}]: ")" answer
+    read -rp "$(echo -e "${BOLD}${question}${RESET} [${hint}]: ")" answer </dev/tty
     answer="${answer:-$default}"
     case "${answer,,}" in
       y|yes) echo "yes"; return ;;
       n|no)  echo "no";  return ;;
-      *) warn "Please answer y or n." ;;
+      *) warn "Please answer y or n." >/dev/tty ;;
     esac
   done
 }
