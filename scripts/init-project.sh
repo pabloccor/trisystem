@@ -39,22 +39,52 @@ ask() {
 }
 
 ask_choice() {
-  # ask_choice "label" option1 option2 ...
-  # Returns the chosen value
+  # ask_choice "question" "keyword|Description line" ...
+  # Option format: "keyword|Description shown below the option"
+  # If no pipe is present, the whole string is used as keyword with no description.
+  # Returns just the keyword.
   local label="$1"; shift
   local options=("$@")
-  local i answer
+  local i answer keyword desc
   echo -e "${BOLD}${label}${RESET}"
+  echo ""
   for i in "${!options[@]}"; do
-    echo "  $((i+1))) ${options[$i]}"
+    keyword="${options[$i]%%|*}"
+    desc="${options[$i]#*|}"
+    if [[ "$desc" == "$keyword" ]]; then
+      # No pipe — single-line option
+      echo -e "  ${CYAN}${BOLD}$((i+1)))${RESET} ${BOLD}${keyword}${RESET}"
+    else
+      echo -e "  ${CYAN}${BOLD}$((i+1)))${RESET} ${BOLD}${keyword}${RESET}"
+      echo -e "     ${DIM}${desc}${RESET}"
+    fi
   done
+  echo ""
   while true; do
     read -rp "$(echo -e "${BOLD}Choice [1-${#options[@]}]:${RESET} ")" answer
     if [[ "$answer" =~ ^[0-9]+$ ]] && (( answer >= 1 && answer <= ${#options[@]} )); then
-      echo "${options[$((answer-1))]}"
+      keyword="${options[$((answer-1))]%%|*}"
+      echo "$keyword"
       return
     fi
     warn "Please enter a number between 1 and ${#options[@]}."
+  done
+}
+
+ask_yn() {
+  # ask_yn "question" [default: y|n]
+  # Prints a Y/n or y/N prompt and returns "yes" or "no"
+  local question="$1" default="${2:-y}" answer
+  local hint
+  if [[ "$default" == "y" ]]; then hint="Y/n"; else hint="y/N"; fi
+  while true; do
+    read -rp "$(echo -e "${BOLD}${question}${RESET} [${hint}]: ")" answer
+    answer="${answer:-$default}"
+    case "${answer,,}" in
+      y|yes) echo "yes"; return ;;
+      n|no)  echo "no";  return ;;
+      *) warn "Please answer y or n." ;;
+    esac
   done
 }
 
@@ -315,104 +345,139 @@ info "Document prefix: ${PROJECT_PREFIX}_"
 
 # ── Step 3: Runtime ───────────────────────────────────────────────────────────
 step 3 "AI coding runtime"
-echo -e "${CYAN}${BOLD}Runtimes:${RESET}"
-echo "  opencode    — Open-source AI coding CLI (opencode.ai). Uses AGENTS.md"
-echo "                and opencode.json for configuration."
-echo "  claude-code — Anthropic's Claude Code CLI. Uses CLAUDE.md and"
-echo "                .claude/settings.json for configuration."
-echo "  both        — Sets up both runtimes with a shared agent, skills, and"
-echo "                rules layer. Good if your team uses different tools."
-echo ""
 RUNTIME="$(ask_choice "Which runtime will you use?" \
-  "opencode    (open-source CLI — AGENTS.md + opencode.json)" \
-  "claude-code (Anthropic's CLI — CLAUDE.md + settings.json)" \
-  "both        (shared agents/skills/rules for both runtimes)")"
-# Extract just the runtime keyword (first word)
-RUNTIME="$(echo "$RUNTIME" | awk '{print $1}')"
+  "opencode|Open-source AI coding CLI (opencode.ai). Configured via AGENTS.md + opencode.json." \
+  "claude-code|Anthropic's Claude Code CLI. Configured via CLAUDE.md + .claude/settings.json." \
+  "both|Sets up both runtimes with a shared agents, skills, and rules layer.")"
 
 # ── Step 4: Template size ─────────────────────────────────────────────────────
 step 4 "Source doc templates"
-echo -e "${CYAN}${BOLD}Template sizes:${RESET}"
-echo "  slim  — Copies starter templates (~200 lines each) into docs/source-of-truth/."
-echo "          Edit them directly to describe your project."
-echo "  empty — Creates blank stub files only. Use the ChatGPT workflow in"
-echo "          templates/README.md to generate the content from scratch."
-echo ""
 TEMPLATE_SIZE="$(ask_choice "Which template size?" \
-  "slim   (recommended — starter structure, ~200 lines each)" \
-  "empty  (blank stubs — generate content with ChatGPT)")"
-# Extract just the size keyword (first word)
-TEMPLATE_SIZE="$(echo "$TEMPLATE_SIZE" | awk '{print $1}')"
+  "slim|Recommended. Copies starter templates (~200 lines each) into docs/source-of-truth/. Edit them to describe your project." \
+  "empty|Creates blank stub files only. Use the ChatGPT workflow in templates/README.md to generate content from scratch.")"
 
 # ── Step 5: Permission mode ───────────────────────────────────────────────────
 step 5 "Permission mode"
-echo -e "${CYAN}${BOLD}Permission modes:${RESET}"
-echo "  autonomous  — Full autonomy including git push. Zero prompts. Best for"
-echo "                trusted pipelines where you want the agent to ship on its own."
-echo "  supervised  — (Recommended) Most ops run freely; git push and deployment"
-echo "                commands require approval. Truly destructive cmds blocked."
-echo "  guarded     — Reads run freely; all writes, bash, and git require approval."
-echo "  locked      — Read-only. No writes, no bash, no git. Analysis mode only."
-echo ""
 PERMISSION_MODE="$(ask_choice "Permission mode?" \
-  "supervised  (recommended — autonomous except git push + deploys)" \
-  "autonomous  (fully autonomous including git push)" \
-  "guarded     (approve every write and bash command)" \
-  "locked      (read-only, no changes)")"
-# Extract just the mode keyword (first word)
-PERMISSION_MODE="$(echo "$PERMISSION_MODE" | awk '{print $1}')"
+  "supervised|Recommended. Most ops run freely; git push and deploy commands require approval. Truly destructive commands are blocked." \
+  "autonomous|Full autonomy including git push. Zero prompts. Best for trusted pipelines." \
+  "guarded|Reads run freely; all writes, bash, and git commands require approval." \
+  "locked|Read-only. No writes, no bash, no git. Analysis and planning mode only.")"
 
 # ── Step 6: Model tier ────────────────────────────────────────────────────────
 step 6 "Model cost tier"
-echo -e "${CYAN}${BOLD}Model cost tiers:${RESET}"
-echo "  premium   — Opus for all complex work, sonnet for medium, haiku for simple."
-echo "              Best results, highest API cost."
-echo "  standard  — (Recommended) Opus for orchestration + architecture, sonnet for"
-echo "              most tasks, haiku for low-demand agents. Best value."
-echo "  economy   — Haiku by default; sonnet for code-intensive agents; opus only"
-echo "              for the orchestrator. Low cost with acceptable quality."
-echo "  minimal   — Haiku everywhere except orchestrator (opus) and developer (sonnet)."
-echo "              Lowest cost."
-echo ""
 MODEL_TIER="$(ask_choice "Model cost tier?" \
-  "standard  (recommended — opus orchestration, sonnet for most, haiku for simple)" \
-  "premium   (opus for all complex work)" \
-  "economy   (haiku default, sonnet for code-intensive)" \
-  "minimal   (haiku everywhere except orchestrator + developer)")"
-# Extract just the tier keyword (first word)
-MODEL_TIER="$(echo "$MODEL_TIER" | awk '{print $1}')"
+  "standard|Recommended. Opus for orchestration + architecture, sonnet for most tasks, haiku for simple agents. Best value." \
+  "premium|Opus for all complex work, sonnet for medium tasks, haiku for simple. Best results, highest cost." \
+  "economy|Haiku by default; sonnet for code-intensive agents; opus only for the orchestrator. Low cost, acceptable quality." \
+  "minimal|Haiku everywhere except orchestrator (opus) and developer (sonnet). Lowest cost.")"
 
 # ── Step 7: Cheatsheet ────────────────────────────────────────────────────────
 step 7 "Cheat sheet"
-echo -e "${CYAN}${BOLD}Cheat sheet:${RESET}"
-echo "  A quick-reference card covering common commands, slash commands, agent"
-echo "  names, and workflow tips — tailored to your chosen runtime."
+echo -e "  ${DIM}A quick-reference card with common commands, slash commands, agent names,"
+echo -e "  and workflow tips — tailored to your chosen runtime.${RESET}"
 echo ""
-INCLUDE_CHEATSHEET="$(ask_choice "Copy cheat sheet into project root?" \
-  "yes  (copy quick-reference card — handy while getting started)" \
-  "no   (skip it)")"
-# Extract just the keyword (first word)
-INCLUDE_CHEATSHEET="$(echo "$INCLUDE_CHEATSHEET" | awk '{print $1}')"
+INCLUDE_CHEATSHEET="$(ask_yn "Copy cheat sheet into project root?" "y")"
 
-# ── Confirm ───────────────────────────────────────────────────────────────────
-echo ""
-echo -e "${DIM}────────────────────────────────────────────${RESET}"
-echo -e "${BOLD}  Review your choices${RESET}"
-echo -e "${DIM}────────────────────────────────────────────${RESET}"
-echo ""
-echo -e "  Target:          ${CYAN}$TARGET_DIR${RESET}"
-echo -e "  Project name:    ${CYAN}$PROJECT_NAME${RESET}  ${DIM}(prefix: ${PROJECT_PREFIX}_)${RESET}"
-echo -e "  Runtime:         ${CYAN}$RUNTIME${RESET}"
-echo -e "  Template size:   ${CYAN}$TEMPLATE_SIZE${RESET}"
-echo -e "  Permission mode: ${CYAN}$PERMISSION_MODE${RESET}"
-echo -e "  Model tier:      ${CYAN}$MODEL_TIER${RESET}"
-echo -e "  Cheat sheet:     ${CYAN}$INCLUDE_CHEATSHEET${RESET}"
-echo ""
-read -rp "$(echo -e "${BOLD}Proceed? [Y/n]:${RESET} ")" go
-if [[ ! "${go:-Y}" =~ ^[Yy]$ ]]; then
-  warn "Aborted."
-  exit 0
-fi
+# ── Review loop ───────────────────────────────────────────────────────────────
+show_summary() {
+  echo ""
+  echo -e "${DIM}────────────────────────────────────────────${RESET}"
+  echo -e "${BOLD}  Review your choices${RESET}"
+  echo -e "${DIM}────────────────────────────────────────────${RESET}"
+  echo ""
+  echo -e "  ${DIM}1. Target dir:     ${RESET}${CYAN}$TARGET_DIR${RESET}"
+  echo -e "  ${DIM}2. Project name:   ${RESET}${CYAN}$PROJECT_NAME${RESET}  ${DIM}(prefix: ${PROJECT_PREFIX}_)${RESET}"
+  echo -e "  ${DIM}3. Runtime:        ${RESET}${CYAN}$RUNTIME${RESET}"
+  echo -e "  ${DIM}4. Template size:  ${RESET}${CYAN}$TEMPLATE_SIZE${RESET}"
+  echo -e "  ${DIM}5. Permission mode:${RESET}${CYAN}$PERMISSION_MODE${RESET}"
+  echo -e "  ${DIM}6. Model tier:     ${RESET}${CYAN}$MODEL_TIER${RESET}"
+  echo -e "  ${DIM}7. Cheat sheet:    ${RESET}${CYAN}$INCLUDE_CHEATSHEET${RESET}"
+  echo ""
+}
+
+while true; do
+  show_summary
+  read -rp "$(echo -e "${BOLD}[P]roceed  [E]dit  [Q]uit:${RESET} ")" review_choice
+  case "${review_choice,,}" in
+    p|proceed|"")
+      break
+      ;;
+    q|quit|exit)
+      warn "Aborted."
+      exit 0
+      ;;
+    e|edit)
+      echo ""
+      echo -e "${BOLD}Which setting do you want to edit?${RESET}"
+      echo ""
+      echo -e "  ${CYAN}${BOLD}1)${RESET} ${BOLD}Target dir${RESET}      ${DIM}$TARGET_DIR${RESET}"
+      echo -e "  ${CYAN}${BOLD}2)${RESET} ${BOLD}Project name${RESET}    ${DIM}$PROJECT_NAME${RESET}"
+      echo -e "  ${CYAN}${BOLD}3)${RESET} ${BOLD}Runtime${RESET}         ${DIM}$RUNTIME${RESET}"
+      echo -e "  ${CYAN}${BOLD}4)${RESET} ${BOLD}Template size${RESET}   ${DIM}$TEMPLATE_SIZE${RESET}"
+      echo -e "  ${CYAN}${BOLD}5)${RESET} ${BOLD}Permission mode${RESET} ${DIM}$PERMISSION_MODE${RESET}"
+      echo -e "  ${CYAN}${BOLD}6)${RESET} ${BOLD}Model tier${RESET}      ${DIM}$MODEL_TIER${RESET}"
+      echo -e "  ${CYAN}${BOLD}7)${RESET} ${BOLD}Cheat sheet${RESET}     ${DIM}$INCLUDE_CHEATSHEET${RESET}"
+      echo ""
+      read -rp "$(echo -e "${BOLD}Edit [1-7]:${RESET} ")" edit_choice
+      case "$edit_choice" in
+        1)
+          TARGET_DIR="$(ask "Target project directory" "$TARGET_DIR")"
+          TARGET_DIR="$(realpath "$TARGET_DIR")"
+          if [[ ! -d "$TARGET_DIR" ]]; then
+            read -rp "$(echo -e "${BOLD}Directory '$TARGET_DIR' does not exist. Create it? [Y/n]:${RESET} ")" confirm
+            if [[ "${confirm:-Y}" =~ ^[Yy]$ ]]; then
+              mkdir -p "$TARGET_DIR"
+              success "Created $TARGET_DIR"
+            fi
+          fi
+          ;;
+        2)
+          PROJECT_NAME="$(ask "Project name" "$PROJECT_NAME")"
+          PROJECT_PREFIX="$(echo "$PROJECT_NAME" | tr '[:lower:]' '[:upper:]' | tr -s ' ' '_' | tr -cd 'A-Z0-9_-')"
+          info "Document prefix: ${PROJECT_PREFIX}_"
+          ;;
+        3)
+          RUNTIME="$(ask_choice "Which runtime will you use?" \
+            "opencode|Open-source AI coding CLI (opencode.ai). Configured via AGENTS.md + opencode.json." \
+            "claude-code|Anthropic's Claude Code CLI. Configured via CLAUDE.md + .claude/settings.json." \
+            "both|Sets up both runtimes with a shared agents, skills, and rules layer.")"
+          ;;
+        4)
+          TEMPLATE_SIZE="$(ask_choice "Which template size?" \
+            "slim|Recommended. Copies starter templates (~200 lines each) into docs/source-of-truth/. Edit them to describe your project." \
+            "empty|Creates blank stub files only. Use the ChatGPT workflow in templates/README.md to generate content from scratch.")"
+          ;;
+        5)
+          PERMISSION_MODE="$(ask_choice "Permission mode?" \
+            "supervised|Recommended. Most ops run freely; git push and deploy commands require approval. Truly destructive commands are blocked." \
+            "autonomous|Full autonomy including git push. Zero prompts. Best for trusted pipelines." \
+            "guarded|Reads run freely; all writes, bash, and git commands require approval." \
+            "locked|Read-only. No writes, no bash, no git. Analysis and planning mode only.")"
+          ;;
+        6)
+          MODEL_TIER="$(ask_choice "Model cost tier?" \
+            "standard|Recommended. Opus for orchestration + architecture, sonnet for most tasks, haiku for simple agents. Best value." \
+            "premium|Opus for all complex work, sonnet for medium tasks, haiku for simple. Best results, highest cost." \
+            "economy|Haiku by default; sonnet for code-intensive agents; opus only for the orchestrator. Low cost, acceptable quality." \
+            "minimal|Haiku everywhere except orchestrator (opus) and developer (sonnet). Lowest cost.")"
+          ;;
+        7)
+          echo -e "  ${DIM}A quick-reference card with common commands, slash commands, agent names,"
+          echo -e "  and workflow tips — tailored to your chosen runtime.${RESET}"
+          echo ""
+          INCLUDE_CHEATSHEET="$(ask_yn "Copy cheat sheet into project root?" "y")"
+          ;;
+        *)
+          warn "Please enter a number between 1 and 7."
+          ;;
+      esac
+      ;;
+    *)
+      warn "Please enter P to proceed, E to edit, or Q to quit."
+      ;;
+  esac
+done
 echo ""
 
 # ── Copy shared content ───────────────────────────────────────────────────────
