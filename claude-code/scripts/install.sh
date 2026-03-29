@@ -246,7 +246,10 @@ CLAUDE_SETTINGS_FILE="$CLAUDE_LOCAL_DIR/settings.json"
 
 mkdir -p "$CLAUDE_LOCAL_DIR"
 
-# Minimal project settings — customize model as needed
+# Minimal project settings — model reflects the standard tier's orchestrator (opus).
+# The init wizard (scripts/init-project.sh) stamps per-agent model: fields in
+# .claude/agents/ based on the chosen cost tier (shared/models/tiers.json).
+# To change tier after init: re-run the init wizard or update agent model: fields.
 cat >"$CLAUDE_SETTINGS_FILE" <<'SETTINGS_EOF'
 {
   "model": "claude-opus-4-5",
