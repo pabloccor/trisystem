@@ -70,22 +70,116 @@ copy_file() {
   fi
 }
 
-# generate_opencode_json <output_path> <mode>
-# Writes opencode.json with the permission block for the specified mode.
+# resolve_model <tier> <agent>
+# Looks up tiers.json and echoes the correct model class (opus/sonnet/haiku)
+# for the given tier + agent combination.
+resolve_model() {
+  local tier="$1" agent="$2"
+  local tiers_json="$TEMPLATE_ROOT/shared/models/tiers.json"
+
+  # Try override first, then default
+  local override default
+  override="$(python3 -c "
+import json, sys
+data = json.load(open('$tiers_json'))
+tier = data['tiers'].get('$tier', {})
+print(tier.get('overrides', {}).get('$agent', ''))
+" 2>/dev/null)"
+
+  if [[ -n "$override" ]]; then
+    echo "$override"
+    return
+  fi
+
+  default="$(python3 -c "
+import json, sys
+data = json.load(open('$tiers_json'))
+print(data['tiers']['$tier']['default'])
+" 2>/dev/null)"
+
+  echo "${default:-sonnet}"
+}
+
+# resolve_model_id <runtime> <model_class>
+# Echoes the full model ID for the given runtime (opencode|claude-code) and class.
+resolve_model_id() {
+  local runtime="$1" model_class="$2"
+  local tiers_json="$TEMPLATE_ROOT/shared/models/tiers.json"
+  python3 -c "
+import json
+data = json.load(open('$tiers_json'))
+print(data['models']['$runtime']['$model_class'])
+" 2>/dev/null
+}
+
+# stamp_agent_models <agents_dir> <runtime> <tier>
+# Injects a 'model: <id>' line into the YAML frontmatter of each agent .md file.
+# If a frontmatter block already has a model: line, it is replaced.
+# If there is no frontmatter, one is created.
+stamp_agent_models() {
+  local agents_dir="$1" runtime="$2" tier="$3"
+  local tiers_json="$TEMPLATE_ROOT/shared/models/tiers.json"
+
+  [[ -d "$agents_dir" ]] || return 0
+
+  local agent_file agent_name model_class model_id
+  for agent_file in "$agents_dir"/*.md; do
+    [[ -f "$agent_file" ]] || continue
+    agent_name="$(basename "$agent_file" .md)"
+    model_class="$(resolve_model "$tier" "$agent_name")"
+    model_id="$(resolve_model_id "$runtime" "$model_class")"
+    [[ -z "$model_id" ]] && continue
+
+    # If file starts with ---, update or insert model: within frontmatter
+    if head -1 "$agent_file" | grep -q '^---'; then
+      # Has frontmatter — replace existing model: line or insert after first ---
+      if grep -q '^model:' "$agent_file"; then
+        sed -i "s|^model:.*|model: ${model_id}|" "$agent_file"
+      else
+        # Insert model: as first key after opening ---
+        python3 -c "
+import sys
+lines = open('$agent_file').readlines()
+out = []
+inserted = False
+for line in lines:
+    out.append(line)
+    if not inserted and line.strip() == '---':
+        out.append('model: ${model_id}\n')
+        inserted = True
+open('$agent_file', 'w').writelines(out)
+"
+      fi
+    else
+      # No frontmatter — prepend one
+      local tmp
+      tmp="$(mktemp)"
+      { printf -- '---\nmodel: %s\n---\n' "$model_id"; cat "$agent_file"; } > "$tmp"
+      mv "$tmp" "$agent_file"
+    fi
+  done
+
+  success "Stamped model IDs into $agents_dir (tier: ${tier})"
+}
+
+# generate_opencode_json <output_path> <mode> <tier>
+# Writes opencode.json with the permission block for the specified mode
+# and the trisystem_model_tier field.
 generate_opencode_json() {
-  local out="$1" mode="$2"
+  local out="$1" mode="$2" tier="${3:-standard}"
   mkdir -p "$(dirname "$out")"
 
   case "$mode" in
     autonomous)
-      cat > "$out" <<'EOF'
+      cat > "$out" <<EOF
 {
-  "$schema": "https://opencode.ai/config.json",
+  "\$schema": "https://opencode.ai/config.json",
   "instructions": [
     ".opencode/rules/*.md"
   ],
 
   "trisystem_permission_mode": "autonomous",
+  "trisystem_model_tier": "${tier}",
 
   "permission": {
     "*": "allow",
@@ -95,14 +189,15 @@ generate_opencode_json() {
 EOF
       ;;
     supervised)
-      cat > "$out" <<'EOF'
+      cat > "$out" <<EOF
 {
-  "$schema": "https://opencode.ai/config.json",
+  "\$schema": "https://opencode.ai/config.json",
   "instructions": [
     ".opencode/rules/*.md"
   ],
 
   "trisystem_permission_mode": "supervised",
+  "trisystem_model_tier": "${tier}",
 
   "permission": {
     "*": "allow",
@@ -122,14 +217,15 @@ EOF
 EOF
       ;;
     guarded)
-      cat > "$out" <<'EOF'
+      cat > "$out" <<EOF
 {
-  "$schema": "https://opencode.ai/config.json",
+  "\$schema": "https://opencode.ai/config.json",
   "instructions": [
     ".opencode/rules/*.md"
   ],
 
   "trisystem_permission_mode": "guarded",
+  "trisystem_model_tier": "${tier}",
 
   "permission": {
     "*": "ask",
@@ -144,14 +240,15 @@ EOF
 EOF
       ;;
     locked)
-      cat > "$out" <<'EOF'
+      cat > "$out" <<EOF
 {
-  "$schema": "https://opencode.ai/config.json",
+  "\$schema": "https://opencode.ai/config.json",
   "instructions": [
     ".opencode/rules/*.md"
   ],
 
   "trisystem_permission_mode": "locked",
+  "trisystem_model_tier": "${tier}",
 
   "permission": {
     "*": "deny",
@@ -168,12 +265,12 @@ EOF
       ;;
     *)
       warn "Unknown permission mode '$mode', defaulting to supervised."
-      generate_opencode_json "$out" "supervised"
+      generate_opencode_json "$out" "supervised" "$tier"
       return
       ;;
   esac
 
-  success "Generated opencode.json (mode: ${mode})"
+  success "Generated opencode.json (mode: ${mode}, tier: ${tier})"
 }
 
 # ── Banner ────────────────────────────────────────────────────────────────────
@@ -241,7 +338,27 @@ PERMISSION_MODE="$(ask_choice "Permission mode?" \
 PERMISSION_MODE="$(echo "$PERMISSION_MODE" | awk '{print $1}')"
 echo ""
 
-# ── Step 6: Cheatsheet ────────────────────────────────────────────────────────
+# ── Step 6: Model tier ────────────────────────────────────────────────────────
+echo -e "${CYAN}${BOLD}Model cost tiers:${RESET}"
+echo "  premium   — Opus for all complex work, sonnet for medium, haiku for simple."
+echo "              Best results, highest API cost."
+echo "  standard  — (Recommended) Opus for orchestration + architecture, sonnet for"
+echo "              most tasks, haiku for low-demand agents. Best value."
+echo "  economy   — Haiku by default; sonnet for code-intensive agents; opus only"
+echo "              for the orchestrator. Low cost with acceptable quality."
+echo "  minimal   — Haiku everywhere except orchestrator (opus) and developer (sonnet)."
+echo "              Lowest cost."
+echo ""
+MODEL_TIER="$(ask_choice "Model cost tier?" \
+  "standard  (recommended — opus orchestration, sonnet for most, haiku for simple)" \
+  "premium   (opus for all complex work)" \
+  "economy   (haiku default, sonnet for code-intensive)" \
+  "minimal   (haiku everywhere except orchestrator + developer)")"
+# Extract just the tier keyword (first word)
+MODEL_TIER="$(echo "$MODEL_TIER" | awk '{print $1}')"
+echo ""
+
+# ── Step 7: Cheatsheet ────────────────────────────────────────────────────────
 INCLUDE_CHEATSHEET="$(ask_choice "Copy cheat sheet?" \
   "yes" \
   "no")"
@@ -254,6 +371,7 @@ echo "  Project name:    $PROJECT_NAME  (prefix: ${PROJECT_PREFIX}_)"
 echo "  Runtime:         $RUNTIME"
 echo "  Template size:   $TEMPLATE_SIZE"
 echo "  Permission mode: $PERMISSION_MODE"
+echo "  Model tier:      $MODEL_TIER"
 echo "  Cheat sheet:     $INCLUDE_CHEATSHEET"
 echo ""
 read -rp "$(echo -e "${BOLD}Proceed? [Y/n]:${RESET} ")" go
@@ -270,12 +388,14 @@ if [[ "$RUNTIME" == "claude-code" || "$RUNTIME" == "both" ]]; then
   copy_dir "$TEMPLATE_ROOT/shared/agents" "$TARGET_DIR/.claude/agents"
   copy_dir "$TEMPLATE_ROOT/shared/skills" "$TARGET_DIR/.claude/skills"
   copy_dir "$TEMPLATE_ROOT/shared/rules"  "$TARGET_DIR/.claude/rules"
+  stamp_agent_models "$TARGET_DIR/.claude/agents" "claude-code" "$MODEL_TIER"
 fi
 
 if [[ "$RUNTIME" == "opencode" || "$RUNTIME" == "both" ]]; then
   copy_dir "$TEMPLATE_ROOT/shared/agents" "$TARGET_DIR/.opencode/agents"
   copy_dir "$TEMPLATE_ROOT/shared/skills" "$TARGET_DIR/.opencode/skills"
   copy_dir "$TEMPLATE_ROOT/shared/rules"  "$TARGET_DIR/.opencode/rules"
+  stamp_agent_models "$TARGET_DIR/.opencode/agents" "opencode" "$MODEL_TIER"
 fi
 
 # ── Copy runtime-specific files ───────────────────────────────────────────────
@@ -302,6 +422,7 @@ if [[ "$RUNTIME" == "opencode" || "$RUNTIME" == "both" ]]; then
     sed \
       -e "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" \
       -e "s/{{PERMISSION_MODE}}/${PERMISSION_MODE}/g" \
+      -e "s/{{MODEL_TIER}}/${MODEL_TIER}/g" \
       "$TEMPLATE_ROOT/opencode/AGENTS.md.template" \
       > "$TARGET_DIR/AGENTS.md"
     success "Generated AGENTS.md"
@@ -309,7 +430,7 @@ if [[ "$RUNTIME" == "opencode" || "$RUNTIME" == "both" ]]; then
 
   # opencode.json — generate with correct permission block for the chosen mode
   if [[ ! -f "$TARGET_DIR/opencode.json" ]]; then
-    generate_opencode_json "$TARGET_DIR/opencode.json" "$PERMISSION_MODE"
+    generate_opencode_json "$TARGET_DIR/opencode.json" "$PERMISSION_MODE" "$MODEL_TIER"
   fi
 
   # package.json for plugins
