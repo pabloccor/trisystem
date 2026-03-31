@@ -35,7 +35,7 @@ ANTHROPIC_BASE_URL_VALUE="${ANTHROPIC_BASE_URL:-}"
 CLAUDE_CODE_DISABLE_BETAS_VALUE="${CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS:-}"
 GITHUB_PAT_VALUE="${GITHUB_PAT:-your-github-pat-here}"
 CONTEXT7_API_KEY_VALUE="${CONTEXT7_API_KEY:-your-context7-api-key-here}"
-DATABASE_URL_VALUE="${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/mydb}"
+DATABASE_URL_VALUE="${DATABASE_URL:-postgresql://user:password@localhost:5432/yourdb}"
 # =================================================================
 
 # Colors

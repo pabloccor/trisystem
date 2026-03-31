@@ -6,8 +6,6 @@ permission:
   edit: allow
   bash:
     "*": allow
-    "git push *": ask
-    "git push": ask
   webfetch: allow
   task: allow
   skill: allow

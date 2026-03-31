@@ -100,7 +100,7 @@ cd trisystem
 
 # Run the interactive wizard; outputs everything into your new project
 ./scripts/init-project.sh /path/to/your-new-project
-# The wizard will ask:
+# If you omit the target directory argument, the wizard will ask:
 #   1. Target directory
 #   2. Project name (used as document prefix)
 #   3. Runtime: opencode | claude-code | both
@@ -468,13 +468,13 @@ All agents are in `.opencode/agents/` with YAML frontmatter defining `descriptio
 4. `python3 .claude/bin/bootstrap_three_docs.py --refresh`
 5. `opencode`
 6. `/bootstrap-three-doc-project`
-4. `@main-orchestrator list phases`
-5. `@main-orchestrator inspect task P03-S01-T001`
-6. `@main-orchestrator claim task P03-S01-T001`
-7. `@main-orchestrator run task P03-S01-T001`
-8. Wait for developer handoff in `.claude/tasks/handoffs/`
-9. `reviewer` and `tester` process the task
-10. `git-manager` prepares commit and PR text
+7. `@main-orchestrator list phases`
+8. `@main-orchestrator inspect task P03-S01-T001`
+9. `@main-orchestrator claim task P03-S01-T001`
+10. `@main-orchestrator run task P03-S01-T001`
+11. Wait for developer handoff in `.claude/tasks/handoffs/`
+12. `reviewer` and `tester` process the task
+13. `git-manager` prepares commit and PR text
 
 ---
 
