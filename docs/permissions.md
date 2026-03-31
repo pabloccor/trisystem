@@ -175,8 +175,10 @@ Some agents override the global permission in their frontmatter to reflect their
 | `git-manager` | `bash: { "git push *": ask }` | Push requires approval in supervised mode |
 | `deployer` | `bash: { apply cmds: ask }` | Destructive deploys ask in supervised mode |
 
-Agent-level overrides are merged with the global config; the more restrictive rule wins
-where they conflict.
+Agent-level overrides are applied on top of the global OpenCode `permission` config using
+a last-match-wins merge: when a global rule and an agent rule overlap, the agent rule takes
+precedence, even if it is *less* restrictive. This means permissive agent frontmatter can
+weaken `guarded`/`locked` modes and must be treated as security-sensitive configuration.
 
 ---
 
