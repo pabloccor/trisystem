@@ -30,8 +30,9 @@ cd trisystem
 #   1. Target directory
 #   2. Project name (used as document prefix)
 #   3. Runtime: opencode | claude-code | both
-#   4. Template size: slim (starter docs) | empty (generate with ChatGPT)
-#   5. Cheat sheet: copy yes/no
+#   4. Permission mode
+#   5. Template size: slim (starter docs) | empty (generate with ChatGPT)
+#   6. Cheat sheet: copy yes/no
 
 # The template repo is no longer needed — delete it if you like
 cd ../ && rm -rf trisystem/
