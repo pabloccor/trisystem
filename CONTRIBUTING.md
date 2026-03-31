@@ -69,9 +69,9 @@ into both `opencode/` and `claude-code/` — the init script copies from `shared
    ```
 3. **Create a branch** from `main`:
    ```bash
-   git checkout -b fix/scope-guard-edge-case
+   git checkout -b bugfix/scope-guard-edge-case
    # or
-   git checkout -b feat/new-agent-security-auditor
+   git checkout -b feature/new-agent-security-auditor
    ```
 4. **Make your changes.** See the sections below for conventions.
 5. **Test your changes** (see [Testing your changes](#testing-your-changes)).
@@ -86,11 +86,13 @@ Branch naming:
 
 | Prefix | Use for |
 |---|---|
-| `feat/` | New agents, skills, commands, features |
-| `fix/` | Bug fixes |
+| `feature/` | New agents, skills, commands, features |
+| `bugfix/` | Bug fixes in non-critical code |
+| `hotfix/` | Urgent fixes to a production issue |
 | `docs/` | Documentation only |
 | `refactor/` | Restructuring without functional change |
 | `chore/` | Maintenance, dependency updates, CI |
+| `test/` | Adding or fixing tests |
 
 Keep PRs focused. One logical change per PR. If you have two unrelated fixes, open two PRs.
 
@@ -109,6 +111,18 @@ Optional body explaining why, not what.
 - **type**: `feat`, `fix`, `docs`, `refactor`, `chore`, `test`
 - **scope**: optional — use the directory or component (e.g., `agents`, `init`, `scope-guard`)
 - **title**: imperative mood, max 50 chars, no period
+
+The commit `type` maps to branch prefixes as follows:
+
+| Branch prefix | Commit type |
+|---|---|
+| `feature/` | `feat` |
+| `bugfix/` | `fix` |
+| `hotfix/` | `fix` |
+| `docs/` | `docs` |
+| `refactor/` | `refactor` |
+| `chore/` | `chore` |
+| `test/` | `test` |
 
 Examples:
 ```

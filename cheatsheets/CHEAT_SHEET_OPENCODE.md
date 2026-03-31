@@ -91,26 +91,43 @@ Key differences from Claude Code `settings.json`:
 
 ## Main commands
 
-### 1) Preparation and bootstrap
+### 1) Set up a new project (one-time)
 
 ```bash
-# (optional) create virtualenv
-python3 -m venv .venv
-source .venv/bin/activate
+# Clone the template (temporary — can be deleted after)
+git clone https://github.com/pabloccor/trisystem.git
+cd trisystem
 
-# install deps if present
-pip install -r .claude/requirements.txt  # if present
+# Run the interactive wizard; outputs everything into your new project
+./scripts/init-project.sh /path/to/your-new-project
+# If you omit the target directory argument, the wizard will ask:
+#   1. Target directory
+#   2. Project name (used as document prefix)
+#   3. Runtime: opencode | claude-code | both
+#   4. Template size: slim (starter docs) | empty (generate with ChatGPT)
+#   5. Cheat sheet: copy yes/no
+
+# The template repo is no longer needed — delete it if you like
+cd ../ && rm -rf trisystem/
+```
+
+### 2) Bootstrap runtime artifacts
+
+```bash
+cd /path/to/your-new-project
+
+# (optional) virtualenv for the bootstrap script
+python3 -m venv .venv && source .venv/bin/activate
 
 # generate runtime artifacts from the 3 source docs
 python3 .claude/bin/bootstrap_three_docs.py --refresh
-# Common options:
 # --refresh     -> overwrite existing artifacts
 # --dry-run     -> validate and show what would be done
 # --outdir PATH -> write to PATH instead of .claude/
 # --verbose     -> extended logs
 ```
 
-### 2) Launch OpenCode
+### 3) Launch OpenCode
 
 ```bash
 # Start OpenCode in the project directory
@@ -445,16 +462,19 @@ All agents are in `.opencode/agents/` with YAML frontmatter defining `descriptio
 
 ## Minimal usage example (steps)
 
-1. `python3 .claude/bin/bootstrap_three_docs.py --refresh`
-2. `opencode`
-3. `/bootstrap-three-doc-project`
-4. `@main-orchestrator list phases`
-5. `@main-orchestrator inspect task P03-S01-T001`
-6. `@main-orchestrator claim task P03-S01-T001`
-7. `@main-orchestrator run task P03-S01-T001`
-8. Wait for developer handoff in `.claude/tasks/handoffs/`
-9. `reviewer` and `tester` process the task
-10. `git-manager` prepares commit and PR text
+1. `git clone https://github.com/pabloccor/trisystem.git && cd trisystem`
+2. `./scripts/init-project.sh /path/to/your-new-project` — choose `opencode` (or `both`)
+3. `cd /path/to/your-new-project`
+4. `python3 .claude/bin/bootstrap_three_docs.py --refresh`
+5. `opencode`
+6. `/bootstrap-three-doc-project`
+7. `@main-orchestrator list phases`
+8. `@main-orchestrator inspect task P03-S01-T001`
+9. `@main-orchestrator claim task P03-S01-T001`
+10. `@main-orchestrator run task P03-S01-T001`
+11. Wait for developer handoff in `.claude/tasks/handoffs/`
+12. `reviewer` and `tester` process the task
+13. `git-manager` prepares commit and PR text
 
 ---
 
