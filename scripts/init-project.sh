@@ -118,7 +118,6 @@ print(data['models']['$runtime']['$model_class'])
 # If there is no frontmatter, one is created.
 stamp_agent_models() {
   local agents_dir="$1" runtime="$2" tier="$3"
-  local tiers_json="$TEMPLATE_ROOT/shared/models/tiers.json"
 
   [[ -d "$agents_dir" ]] || return 0
 
