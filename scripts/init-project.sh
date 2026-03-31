@@ -128,7 +128,10 @@ stamp_agent_models() {
     agent_name="$(basename "$agent_file" .md)"
     model_class="$(resolve_model "$tier" "$agent_name")"
     model_id="$(resolve_model_id "$runtime" "$model_class")"
-    [[ -z "$model_id" ]] && continue
+    if [[ -z "$model_id" ]]; then
+      warn "Could not resolve model for agent '${agent_name}' (runtime='${runtime}', tier='${tier}'); leaving file unstamped: ${agent_file}"
+      continue
+    fi
 
     # If file starts with ---, update or insert model: within frontmatter
     if head -1 "$agent_file" | grep -q '^---'; then
