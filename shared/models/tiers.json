@@ -3,13 +3,13 @@
 
   "models": {
     "opencode": {
-      "opus":   "github-copilot/claude-opus-4.5",
+      "opus": "github-copilot/claude-opus-4.6",
       "sonnet": "github-copilot/claude-sonnet-4.6",
       "haiku":  "github-copilot/claude-haiku-4.5"
     },
     "claude-code": {
-      "opus":   "claude-opus-4-5",
-      "sonnet": "claude-sonnet-4-5",
+      "opus": "claude-opus-4-6",
+      "sonnet": "claude-sonnet-4-6",
       "haiku":  "claude-haiku-4-5"
     }
   },

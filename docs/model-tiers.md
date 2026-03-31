@@ -70,8 +70,8 @@ This means the model is baked directly into the agent file — the runtime reads
 
 | Runtime | Opus | Sonnet | Haiku |
 |---|---|---|---|
-| OpenCode (GitHub Copilot) | `github-copilot/claude-opus-4.5` | `github-copilot/claude-sonnet-4.6` | `github-copilot/claude-haiku-4.5` |
-| Claude Code (Anthropic) | `claude-opus-4-5` | `claude-sonnet-4-5` | `claude-haiku-4-5` |
+| OpenCode (GitHub Copilot) | `github-copilot/claude-opus-4.6` | `github-copilot/claude-sonnet-4.6` | `github-copilot/claude-haiku-4.5` |
+| Claude Code (Anthropic) | `claude-opus-4-6` | `claude-sonnet-4-6` | `claude-haiku-4-5` |
 
 ---
 
