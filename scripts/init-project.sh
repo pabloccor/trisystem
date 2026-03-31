@@ -134,7 +134,8 @@ stamp_agent_models() {
     if head -1 "$agent_file" | grep -q '^---'; then
       # Has frontmatter — replace existing model: line or insert after first ---
       if grep -q '^model:' "$agent_file"; then
-        sed -i "s|^model:.*|model: ${model_id}|" "$agent_file"
+        sed -i.tmp "s|^model:.*|model: ${model_id}|" "$agent_file"
+        rm -f "${agent_file}.tmp"
       else
         # Insert model: as first key after opening ---
         python3 -c "
