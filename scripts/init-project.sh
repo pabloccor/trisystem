@@ -224,22 +224,24 @@ TEMPLATE_SIZE="$(ask_choice "Template size for source docs?" \
 echo ""
 
 # ── Step 5: Permission mode ───────────────────────────────────────────────────
-echo -e "${CYAN}${BOLD}Permission modes:${RESET}"
-echo "  autonomous  — Full autonomy including git push. Zero prompts. Best for"
-echo "                trusted pipelines where you want the agent to ship on its own."
-echo "  supervised  — (Recommended) Most ops run freely; git push and deployment"
-echo "                commands require approval. Truly destructive cmds blocked."
-echo "  guarded     — Reads run freely; all writes, bash, and git require approval."
-echo "  locked      — Read-only. No writes, no bash, no git. Analysis mode only."
-echo ""
-PERMISSION_MODE="$(ask_choice "Permission mode?" \
-  "supervised  (recommended — autonomous except git push + deploys)" \
-  "autonomous  (fully autonomous including git push)" \
-  "guarded     (approve every write and bash command)" \
-  "locked      (read-only, no changes)")"
-# Extract just the mode keyword (first word)
-PERMISSION_MODE="$(echo "$PERMISSION_MODE" | awk '{print $1}')"
-echo ""
+if [ "$RUNTIME" = "opencode" ] || [ "$RUNTIME" = "both" ]; then
+  echo -e "${CYAN}${BOLD}Permission modes:${RESET}"
+  echo "  autonomous  — Full autonomy including git push. Zero prompts. Best for"
+  echo "                trusted pipelines where you want the agent to ship on its own."
+  echo "  supervised  — (Recommended) Most ops run freely; git push and deployment"
+  echo "                commands require approval. Truly destructive cmds blocked."
+  echo "  guarded     — Reads run freely; all writes, bash, and git require approval."
+  echo "  locked      — Read-only. No writes, no bash, no git. Analysis mode only."
+  echo ""
+  PERMISSION_MODE="$(ask_choice "Permission mode?" \
+    "supervised  (recommended — autonomous except git push + deploys)" \
+    "autonomous  (fully autonomous including git push)" \
+    "guarded     (approve every write and bash command)" \
+    "locked      (read-only, no changes)")"
+  # Extract just the mode keyword (first word)
+  PERMISSION_MODE="$(echo "$PERMISSION_MODE" | awk '{print $1}')"
+  echo ""
+fi
 
 # ── Step 6: Cheatsheet ────────────────────────────────────────────────────────
 INCLUDE_CHEATSHEET="$(ask_choice "Copy cheat sheet?" \
