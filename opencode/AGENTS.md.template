@@ -23,8 +23,8 @@ This project is running in **`{{PERMISSION_MODE}}`** mode.
 | `guarded` | Reads run freely; all writes, bash, and git require approval. |
 | `locked` | Read-only. No writes, no bash, no git. |
 
-To change mode: update `trisystem_permission_mode` in `opencode.json` and replace the
-`permission` block with the corresponding preset from `shared/permissions/modes.json`.
+To change mode: update `permission_mode` in `.opencode/trisystem.json` and replace the
+`permission` block in `opencode.json` with the corresponding preset from `shared/permissions/modes.json`.
 
 ## Model tier
 

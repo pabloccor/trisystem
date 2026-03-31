@@ -25,7 +25,7 @@ Read:
 
 ## Permission-mode awareness
 
-Check `opencode.json` for `trisystem_permission_mode`:
+Check `.opencode/trisystem.json` for `permission_mode`:
 
 | Mode | Behavior |
 |---|---|

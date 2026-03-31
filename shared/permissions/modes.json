@@ -1,6 +1,6 @@
 {
-  "_comment": "TriSystem permission mode presets. The active mode is set in opencode.json under 'trisystem_permission_mode'.",
-  "_usage": "Select a mode at init time. To change later, update 'trisystem_permission_mode' in opencode.json and apply the corresponding 'permission' block.",
+  "_comment": "TriSystem permission mode presets. The active mode is set in .opencode/trisystem.json under 'permission_mode'.",
+  "_usage": "Select a mode at init time. To change later, update 'permission_mode' in .opencode/trisystem.json and apply the corresponding 'permission' block to opencode.json.",
 
   "modes": {
     "autonomous": {

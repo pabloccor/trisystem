@@ -197,11 +197,25 @@ open('$agent_file', 'w').writelines(out)
   success "Stamped model IDs into $agents_dir (tier: ${tier})"
 }
 
-# generate_opencode_json <output_path> <mode> <tier>
-# Writes opencode.json with the permission block for the specified mode
-# and the trisystem_model_tier field.
-generate_opencode_json() {
+# generate_trisystem_json <output_path> <mode> <tier>
+# Writes .opencode/trisystem.json with the permission mode and model tier metadata.
+# This file is read by the scope-guard plugin at runtime.
+generate_trisystem_json() {
   local out="$1" mode="$2" tier="${3:-standard}"
+  mkdir -p "$(dirname "$out")"
+  cat > "$out" <<EOF
+{
+  "permission_mode": "${mode}",
+  "model_tier": "${tier}"
+}
+EOF
+  success "Generated trisystem.json (mode: ${mode}, tier: ${tier})"
+}
+
+# generate_opencode_json <output_path> <mode>
+# Writes opencode.json with the permission block for the specified mode.
+generate_opencode_json() {
+  local out="$1" mode="$2"
   mkdir -p "$(dirname "$out")"
 
   case "$mode" in
@@ -212,9 +226,6 @@ generate_opencode_json() {
   "instructions": [
     ".opencode/rules/*.md"
   ],
-
-  "trisystem_permission_mode": "autonomous",
-  "trisystem_model_tier": "${tier}",
 
   "permission": {
     "*": "allow",
@@ -230,9 +241,6 @@ EOF
   "instructions": [
     ".opencode/rules/*.md"
   ],
-
-  "trisystem_permission_mode": "supervised",
-  "trisystem_model_tier": "${tier}",
 
   "permission": {
     "*": "allow",
@@ -259,9 +267,6 @@ EOF
     ".opencode/rules/*.md"
   ],
 
-  "trisystem_permission_mode": "guarded",
-  "trisystem_model_tier": "${tier}",
-
   "permission": {
     "*": "ask",
     "read": "allow",
@@ -282,9 +287,6 @@ EOF
     ".opencode/rules/*.md"
   ],
 
-  "trisystem_permission_mode": "locked",
-  "trisystem_model_tier": "${tier}",
-
   "permission": {
     "*": "deny",
     "read": "allow",
@@ -300,12 +302,12 @@ EOF
       ;;
     *)
       warn "Unknown permission mode '$mode', defaulting to supervised."
-      generate_opencode_json "$out" "supervised" "$tier"
+      generate_opencode_json "$out" "supervised"
       return
       ;;
   esac
 
-  success "Generated opencode.json (mode: ${mode}, tier: ${tier})"
+  success "Generated opencode.json (mode: ${mode})"
 }
 
 # ── Banner ────────────────────────────────────────────────────────────────────
@@ -528,8 +530,11 @@ if [[ "$RUNTIME" == "opencode" || "$RUNTIME" == "both" ]]; then
 
   # opencode.json — generate with correct permission block for the chosen mode
   if [[ ! -f "$TARGET_DIR/opencode.json" ]]; then
-    generate_opencode_json "$TARGET_DIR/opencode.json" "$PERMISSION_MODE" "$MODEL_TIER"
+    generate_opencode_json "$TARGET_DIR/opencode.json" "$PERMISSION_MODE"
   fi
+
+  # trisystem.json — metadata for the scope-guard plugin (mode + tier)
+  generate_trisystem_json "$TARGET_DIR/.opencode/trisystem.json" "$PERMISSION_MODE" "$MODEL_TIER"
 
   # package.json for plugins
   copy_file "$TEMPLATE_ROOT/opencode/package.json" "$TARGET_DIR/.opencode/package.json"

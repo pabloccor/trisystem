@@ -316,7 +316,7 @@ cannot loosen it (e.g., allow `bash` when the global is `deny`).
 
 ## Permission modes and agents
 
-The project-level permission mode (set in `opencode.json` as `trisystem_permission_mode`)
+The project-level permission mode (set in `.opencode/trisystem.json` as `permission_mode`)
 determines the baseline for all agents. Individual agents may tighten that baseline via
 their frontmatter `permission` field.
 

@@ -22,7 +22,7 @@ You are the git changes manager.
 
 ## Permission-mode awareness
 
-Check `opencode.json` for the `trisystem_permission_mode` value and follow the corresponding rule:
+Check `.opencode/trisystem.json` for the `permission_mode` value and follow the corresponding rule:
 
 | Mode | git push behavior |
 |---|---|

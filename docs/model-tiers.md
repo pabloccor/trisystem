@@ -108,6 +108,6 @@ Model tier and permission mode are independent settings. You can combine any tie
 | `economy` | ✓ | ✓ | ✓ | ✓ |
 | `minimal` | ✓ | ✓ | ✓ | ✓ |
 
-Both are recorded in `opencode.json` under `trisystem_permission_mode` and `trisystem_model_tier`. These fields are informational — the actual behavior comes from the `permission` block (for modes) and the agent frontmatter `model:` lines (for tiers).
+Both are recorded in `.opencode/trisystem.json` under `permission_mode` and `model_tier`. These fields are informational — the actual behavior comes from the `permission` block in `opencode.json` (for modes) and the agent frontmatter `model:` lines (for tiers).
 
 See [Permissions](permissions.md) for the full permission mode reference.
