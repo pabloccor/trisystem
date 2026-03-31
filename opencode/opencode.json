@@ -3,5 +3,21 @@
   "instructions": [
     ".opencode/rules/*.md"
   ],
-  "permission": "allow"
+
+  "trisystem_permission_mode": "supervised",
+
+  "permission": {
+    "*": "allow",
+    "doom_loop": "ask",
+    "bash": {
+      "*": "allow",
+      "rm -rf *": "ask",
+      "git push *": "ask",
+      "git push": "ask",
+      "shutdown *": "deny",
+      "reboot *": "deny",
+      "mkfs *": "deny",
+      "dd if=*": "deny"
+    }
+  }
 }

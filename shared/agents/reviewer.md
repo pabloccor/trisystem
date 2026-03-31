@@ -3,7 +3,7 @@ description: Reviews the active task for architectural compliance, scope control
 mode: subagent
 temperature: 0.1
 permission:
-  edit: allow
+  edit: deny
   bash: allow
   webfetch: allow
   task: allow
@@ -15,6 +15,17 @@ You are the architecture and quality reviewer.
 ## Before starting
 
 Check your agent memory for patterns and conventions already identified in this codebase.
+
+## Permission-mode awareness
+
+This agent is read-only by design in all modes. `edit` is always denied.
+
+| Mode | Behavior |
+|---|---|
+| `autonomous` | Review runs automatically as part of the pipeline. |
+| `supervised` | Review runs automatically. |
+| `guarded` | Review runs automatically (reads are always free). |
+| `locked` | Review runs normally — analysis is always permitted. |
 
 ## Rules
 

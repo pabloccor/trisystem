@@ -23,6 +23,17 @@ Read:
 - Relevant official note if one exists
 - Previous handoff if one exists
 
+## Permission-mode awareness
+
+Check `opencode.json` for `trisystem_permission_mode`:
+
+| Mode | Behavior |
+|---|---|
+| `autonomous` | Implement freely. All writes and bash commands run without prompts. |
+| `supervised` | Implement freely. Writes and bash are allowed; git push will be handled by git-manager with approval. |
+| `guarded` | For this developer agent, edits and bash still follow the agent permissions above (no per-command approval); rely on higher-level tools for any extra gating. |
+| `locked` | Do not implement. Read and analyze only. Report what you would have done. |
+
 ## Rules
 
 1. Implement only the active task.
