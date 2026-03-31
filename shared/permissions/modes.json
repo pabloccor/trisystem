@@ -1,6 +1,6 @@
 {
-  "_comment": "TriSystem permission mode presets. The active mode is set in opencode.json under 'trisystem_permission_mode'.",
-  "_usage": "Select a mode at init time. To change later, update 'trisystem_permission_mode' in opencode.json and apply the corresponding 'permission' block.",
+  "_comment": "TriSystem permission mode presets. The active mode is set in .opencode/trisystem.json under 'permission_mode'.",
+  "_usage": "Select a mode at init time. To change later, update 'permission_mode' in .opencode/trisystem.json and apply the corresponding 'permission' block to opencode.json.",
 
   "modes": {
     "autonomous": {
@@ -30,7 +30,7 @@
     },
 
     "supervised": {
-      "_description": "Default recommended mode. Most operations run automatically, but git push and deployment commands require approval. Destructive bash is blocked by the scope-guard. Suitable for normal development with human checkpoints on irreversible actions.",
+      "_description": "Default recommended mode. Most operations run automatically, but git push, git commit, and deployment commands require approval. Destructive bash is blocked by the scope-guard. Suitable for normal development with human checkpoints on irreversible actions.",
       "permission": {
         "*": "allow",
         "doom_loop": "ask",
@@ -54,9 +54,10 @@
           "/(^|\\s)dd\\s+if="
         ],
         "ask_commands": [
-          "/(^|\\s)git\\s+push(\\s|$)/"
+          "/(^|\\s)git\\s+push(\\s|$)/",
+          "/(^|\\s)git\\s+commit(\\s|$)/"
         ],
-        "comment": "git push is intercepted for approval. Truly destructive system commands are hard-blocked."
+        "comment": "git push and git commit are intercepted for approval. Truly destructive system commands are hard-blocked."
       },
       "agent_overrides": {
         "git-manager": {

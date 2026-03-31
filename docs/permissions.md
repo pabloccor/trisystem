@@ -20,7 +20,7 @@ Use this when:
 - You are running in a CI/CD environment or non-interactive terminal
 
 ```json
-"trisystem_permission_mode": "autonomous"
+"permission_mode": "autonomous"
 ```
 
 The `git-manager` agent will stage, commit, and push in a single uninterrupted flow after
@@ -46,7 +46,7 @@ Use this when:
 - This is the right choice for most projects
 
 ```json
-"trisystem_permission_mode": "supervised"
+"permission_mode": "supervised"
 ```
 
 ---
@@ -64,7 +64,7 @@ Use this when:
 - You want to use the agent as a pair programmer that suggests changes for you to approve
 
 ```json
-"trisystem_permission_mode": "guarded"
+"permission_mode": "guarded"
 ```
 
 Read-only agents (reviewer, security-auditor, document-analyzer, etc.) are unaffected —
@@ -86,7 +86,7 @@ Use this when:
 - You are generating a plan to review before switching to a different mode
 
 ```json
-"trisystem_permission_mode": "locked"
+"permission_mode": "locked"
 ```
 
 ---
@@ -104,18 +104,18 @@ Use this when:
 
 ## How mode is stored
 
-The mode is stored in `opencode.json` under the `trisystem_permission_mode` key:
+The mode is stored in `.opencode/trisystem.json` under the `permission_mode` key:
 
 ```json
 {
-  "$schema": "https://opencode.ai/config.json",
-  "trisystem_permission_mode": "supervised",
-  "permission": { ... }
+  "permission_mode": "supervised",
+  "model_tier": "standard"
 }
 ```
 
-The `permission` block is the actual OpenCode permission config that enforces the mode.
-The `trisystem_permission_mode` key is read by:
+The corresponding `permission` block in `opencode.json` is the actual OpenCode permission
+config that enforces the mode.
+The `permission_mode` key is read by:
 - The `scope-guard.js` plugin, to select the right command blocklist
 - The `git-manager` agent, to decide whether to push automatically
 - The `deployer` agent, to decide whether to prompt before apply commands
@@ -125,17 +125,26 @@ The `trisystem_permission_mode` key is read by:
 
 ## Changing mode after initialization
 
-1. Edit `opencode.json`: update `trisystem_permission_mode` to the new mode
-2. Replace the `permission` block with the corresponding preset from
+1. Edit `.opencode/trisystem.json`: update `permission_mode` to the new mode
+2. Replace the `permission` block in `opencode.json` with the corresponding preset from
    `shared/permissions/modes.json`
 3. Restart OpenCode
 
 **Example — switching to autonomous:**
 
+In `.opencode/trisystem.json`:
+```json
+{
+  "permission_mode": "autonomous",
+  "model_tier": "standard"
+}
+```
+
+In `opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "trisystem_permission_mode": "autonomous",
+  "instructions": [".opencode/rules/*.md"],
   "permission": {
     "*": "allow",
     "doom_loop": "ask"
@@ -148,7 +157,7 @@ The `trisystem_permission_mode` key is read by:
 ## How the scope-guard enforces modes
 
 The `scope-guard.js` plugin is a pre-tool hook that runs before every bash command and
-file write. It reads `trisystem_permission_mode` from `opencode.json` at runtime and
+file write. It reads `permission_mode` from `.opencode/trisystem.json` at runtime and
 applies the corresponding blocklist:
 
 | Mode | Blocked bash commands |
@@ -175,10 +184,8 @@ Some agents override the global permission in their frontmatter to reflect their
 | `git-manager` | `bash: { "git push *": ask }` | Push requires approval in supervised mode |
 | `deployer` | `bash: { apply cmds: ask }` | Destructive deploys ask in supervised mode |
 
-Agent-level overrides are applied on top of the global OpenCode `permission` config using
-a last-match-wins merge: when a global rule and an agent rule overlap, the agent rule takes
-precedence, even if it is *less* restrictive. This means permissive agent frontmatter can
-weaken `guarded`/`locked` modes and must be treated as security-sensitive configuration.
+Agent-level overrides are merged with the global config; the more restrictive rule wins
+where they conflict.
 
 ---
 

@@ -259,7 +259,7 @@ Executes deployment checklists (K8s, Helm, Docker, etc.) with safety checks at e
 
 ### technical-analyst
 
-| Property | Value |
+| Property | Value |      
 |---|---|
 | **Mode** | Subagent |
 | **Role** | Analyzes technical feasibility and risks |

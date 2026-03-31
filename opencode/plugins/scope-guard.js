@@ -75,13 +75,19 @@ function matchesAny(rel, patterns) {
 }
 
 async function resolveMode(worktree) {
-  // 1. Check project-local opencode.json for trisystem_permission_mode
+  // 1. Check .opencode/trisystem.json for permission_mode (current location)
+  const trisystem = await readJson(path.join(worktree, ".opencode/trisystem.json"), {})
+  if (trisystem.permission_mode) {
+    return trisystem.permission_mode
+  }
+
+  // 2. Backward compat: check opencode.json for the old trisystem_permission_mode key
   const projectConfig = await readJson(path.join(worktree, "opencode.json"), {})
   if (projectConfig.trisystem_permission_mode) {
     return projectConfig.trisystem_permission_mode
   }
 
-  // 2. Fall back to the template default
+  // 3. Fall back to the template default
   return DEFAULT_MODE
 }
 

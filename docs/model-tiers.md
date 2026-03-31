@@ -70,8 +70,8 @@ This means the model is baked directly into the agent file — the runtime reads
 
 | Runtime | Opus | Sonnet | Haiku |
 |---|---|---|---|
-| OpenCode (GitHub Copilot) | `github-copilot/claude-opus-4.5` | `github-copilot/claude-sonnet-4.6` | `github-copilot/claude-haiku-4.5` |
-| Claude Code (Anthropic) | `claude-opus-4-5` | `claude-sonnet-4-5` | `claude-haiku-4-5` |
+| OpenCode (GitHub Copilot) | `github-copilot/claude-opus-4.6` | `github-copilot/claude-sonnet-4.6` | `github-copilot/claude-haiku-4.5` |
+| Claude Code (Anthropic) | `claude-opus-4-6` | `claude-sonnet-4-6` | `claude-haiku-4-5` |
 
 ---
 
@@ -108,6 +108,6 @@ Model tier and permission mode are independent settings. You can combine any tie
 | `economy` | ✓ | ✓ | ✓ | ✓ |
 | `minimal` | ✓ | ✓ | ✓ | ✓ |
 
-Both are recorded in `opencode.json` under `trisystem_permission_mode` and `trisystem_model_tier`. These fields are informational — the actual behavior comes from the `permission` block (for modes) and the agent frontmatter `model:` lines (for tiers).
+Both are recorded in `.opencode/trisystem.json` under `permission_mode` and `model_tier`. These fields are informational — the actual behavior comes from the `permission` block in `opencode.json` (for modes) and the agent frontmatter `model:` lines (for tiers).
 
 See [Permissions](permissions.md) for the full permission mode reference.

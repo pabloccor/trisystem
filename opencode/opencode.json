@@ -4,8 +4,6 @@
     ".opencode/rules/*.md"
   ],
 
-  "trisystem_permission_mode": "supervised",
-
   "permission": {
     "*": "allow",
     "doom_loop": "ask",
