@@ -259,7 +259,7 @@ Executes deployment checklists (K8s, Helm, Docker, etc.) with safety checks at e
 
 ### technical-analyst
 
-| Property | Value |
+| Property | Value |      
 |---|---|
 | **Mode** | Subagent |
 | **Role** | Analyzes technical feasibility and risks |
@@ -307,18 +307,19 @@ and any constraints.
 | `permission` | No | OpenCode permission block. Can be a string (`allow`/`ask`/`deny`) or an object with per-tool rules. |
 | `tools` | No | List of tools the agent can use. Constrains its capabilities |
 
-The `permission` field in agent frontmatter is merged with the global `opencode.json`
-permission config. The **more restrictive rule wins** when they overlap. This means an
-agent can tighten the global policy (e.g., deny `edit` when the global is `allow`) but
-cannot loosen it (e.g., allow `bash` when the global is `deny`).
+The `permission` field in agent frontmatter is combined with the global `opencode.json`
+permission config using a **last matching rule wins** strategy. Agent-level rules are
+evaluated after the global rules, which means an agent can both tighten and loosen the
+global policy (e.g., deny `edit` when the global is `allow`, or allow `bash` when the
+global is `deny`).
 
 ---
 
 ## Permission modes and agents
 
-The project-level permission mode (set in `.opencode/trisystem.json` as `permission_mode`)
-determines the baseline for all agents. Individual agents may tighten that baseline via
-their frontmatter `permission` field.
+The project-level permission mode (set in `opencode.json` as `trisystem_permission_mode`)
+determines the baseline for all agents. Individual agents may further adjust that baseline
+(tighten or loosen it) via their frontmatter `permission` field.
 
 ### Effective permissions per mode
 

@@ -26,12 +26,13 @@ cd trisystem
 
 # Run the interactive wizard; outputs everything into your new project
 ./scripts/init-project.sh /path/to/your-new-project
-# The wizard will ask:
+# If you omit the target directory argument, the wizard will ask:
 #   1. Target directory
 #   2. Project name (used as document prefix)
 #   3. Runtime: opencode | claude-code | both
-#   4. Template size: slim (starter docs) | empty (generate with ChatGPT)
-#   5. Cheat sheet: copy yes/no
+#   4. Permission mode
+#   5. Template size: slim (starter docs) | empty (generate with ChatGPT)
+#   6. Cheat sheet: copy yes/no
 
 # The template repo is no longer needed — delete it if you like
 cd ../ && rm -rf trisystem/
@@ -259,10 +260,10 @@ python .claude/bin/gen_pr_text.py --task P03-S01-T001
 4. `python3 .claude/bin/bootstrap_three_docs.py --refresh`
 5. `claude --agent main-orchestrator`
 6. `/bootstrap-three-doc-project`
-4. `list phases`
-5. `inspect task P03-S01-T001`
-6. `claim task P03-S01-T001`
-7. `run task P03-S01-T001`
-8. Wait for `SubagentStop` hook to create handoff
-9. `reviewer` and `tester` process the task
-10. `git-manager` prepares commit and PR text
+7. `list phases`
+8. `inspect task P03-S01-T001`
+9. `claim task P03-S01-T001`
+10. `run task P03-S01-T001`
+11. Wait for `SubagentStop` hook to create handoff
+12. `reviewer` and `tester` process the task
+13. `git-manager` prepares commit and PR text

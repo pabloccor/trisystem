@@ -28,7 +28,7 @@ The **orchestrator is always opus** across all tiers. It coordinates the pipelin
 | `technical-analyst` | sonnet | sonnet | haiku | haiku |
 | `security-auditor` | sonnet | sonnet | haiku | haiku |
 | `qa-validator` | sonnet | sonnet | haiku | haiku |
-| `deployer` | sonnet | sonnet | sonnet | haiku |
+| `deployer` | sonnet | sonnet | sonnet | sonnet |
 | `tester` | sonnet | haiku | haiku | haiku |
 | `document-analyzer` | haiku | haiku | haiku | haiku |
 | `official-docs-researcher` | haiku | haiku | haiku | haiku |

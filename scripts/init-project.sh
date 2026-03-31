@@ -153,7 +153,6 @@ print(data['models']['$runtime']['$model_class'])
 # If there is no frontmatter, one is created.
 stamp_agent_models() {
   local agents_dir="$1" runtime="$2" tier="$3"
-  local tiers_json="$TEMPLATE_ROOT/shared/models/tiers.json"
 
   [[ -d "$agents_dir" ]] || return 0
 
@@ -163,13 +162,17 @@ stamp_agent_models() {
     agent_name="$(basename "$agent_file" .md)"
     model_class="$(resolve_model "$tier" "$agent_name")"
     model_id="$(resolve_model_id "$runtime" "$model_class")"
-    [[ -z "$model_id" ]] && continue
+    if [[ -z "$model_id" ]]; then
+      warn "Could not resolve model for agent '${agent_name}' (runtime='${runtime}', tier='${tier}'); leaving file unstamped: ${agent_file}"
+      continue
+    fi
 
     # If file starts with ---, update or insert model: within frontmatter
     if head -1 "$agent_file" | grep -q '^---'; then
       # Has frontmatter — replace existing model: line or insert after first ---
       if grep -q '^model:' "$agent_file"; then
-        sed -i "s|^model:.*|model: ${model_id}|" "$agent_file"
+        sed -i.tmp "s|^model:.*|model: ${model_id}|" "$agent_file"
+        rm -f "${agent_file}.tmp"
       else
         # Insert model: as first key after opening ---
         python3 -c "
@@ -302,12 +305,12 @@ EOF
       ;;
     *)
       warn "Unknown permission mode '$mode', defaulting to supervised."
-      generate_opencode_json "$out" "supervised"
+      generate_opencode_json "$out" "supervised" "$tier"
       return
       ;;
   esac
 
-  success "Generated opencode.json (mode: ${mode})"
+  success "Generated opencode.json (mode: ${mode}, tier: ${tier})"
 }
 
 # ── Banner ────────────────────────────────────────────────────────────────────
@@ -530,7 +533,7 @@ if [[ "$RUNTIME" == "opencode" || "$RUNTIME" == "both" ]]; then
 
   # opencode.json — generate with correct permission block for the chosen mode
   if [[ ! -f "$TARGET_DIR/opencode.json" ]]; then
-    generate_opencode_json "$TARGET_DIR/opencode.json" "$PERMISSION_MODE"
+    generate_opencode_json "$TARGET_DIR/opencode.json" "$PERMISSION_MODE" "$MODEL_TIER"
   fi
 
   # trisystem.json — metadata for the scope-guard plugin (mode + tier)

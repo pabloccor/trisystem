@@ -58,11 +58,12 @@
       }
     },
     "minimal": {
-      "description": "Minimum cost — haiku everywhere except the orchestrator (opus) and developer (sonnet).",
+      "description": "Minimum cost — haiku everywhere except the orchestrator (opus), developer (sonnet), and deployer (sonnet).",
       "default": "haiku",
       "overrides": {
         "main-orchestrator":  "opus",
-        "developer":          "sonnet"
+        "developer":          "sonnet",
+        "deployer":           "sonnet"
       }
     }
   },
