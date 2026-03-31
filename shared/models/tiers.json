@@ -1,0 +1,90 @@
+{
+  "_comment": "Model tier definitions for the three-doc-template orchestration system. Each tier assigns a Claude model to every agent based on cognitive demand vs cost tradeoff. The orchestrator is always opus across all tiers.",
+
+  "models": {
+    "opencode": {
+      "opus":   "github-copilot/claude-opus-4.5",
+      "sonnet": "github-copilot/claude-sonnet-4.6",
+      "haiku":  "github-copilot/claude-haiku-4.5"
+    },
+    "claude-code": {
+      "opus":   "claude-opus-4-5",
+      "sonnet": "claude-sonnet-4-5",
+      "haiku":  "claude-haiku-4-5"
+    }
+  },
+
+  "tiers": {
+    "premium": {
+      "description": "Maximum quality — opus for all high-demand agents, sonnet for medium, haiku for low. Best results, highest cost.",
+      "default": "sonnet",
+      "overrides": {
+        "main-orchestrator":  "opus",
+        "project-architect":  "opus",
+        "developer":          "opus",
+        "debugger":           "opus",
+        "document-analyzer":  "haiku",
+        "official-docs-researcher": "haiku",
+        "context-curator":    "haiku",
+        "phase-controller":   "haiku",
+        "evidence-reporter":  "haiku",
+        "git-manager":        "haiku"
+      }
+    },
+    "standard": {
+      "description": "Balanced quality and cost — opus for orchestration and architecture, sonnet for most work, haiku for low-demand tasks.",
+      "default": "sonnet",
+      "overrides": {
+        "main-orchestrator":  "opus",
+        "project-architect":  "opus",
+        "tester":             "haiku",
+        "document-analyzer":  "haiku",
+        "official-docs-researcher": "haiku",
+        "context-curator":    "haiku",
+        "phase-controller":   "haiku",
+        "evidence-reporter":  "haiku",
+        "git-manager":        "haiku"
+      }
+    },
+    "economy": {
+      "description": "Cost-optimised — haiku by default, sonnet for code-intensive agents, opus only for the orchestrator.",
+      "default": "haiku",
+      "overrides": {
+        "main-orchestrator":  "opus",
+        "developer":          "sonnet",
+        "reviewer":           "sonnet",
+        "debugger":           "sonnet",
+        "deployer":           "sonnet"
+      }
+    },
+    "minimal": {
+      "description": "Minimum cost — haiku everywhere except the orchestrator (opus), developer (sonnet), and deployer (sonnet).",
+      "default": "haiku",
+      "overrides": {
+        "main-orchestrator":  "opus",
+        "developer":          "sonnet",
+        "deployer":           "sonnet"
+      }
+    }
+  },
+
+  "agents": [
+    "main-orchestrator",
+    "project-architect",
+    "developer",
+    "debugger",
+    "reviewer",
+    "task-planner",
+    "technical-analyst",
+    "security-auditor",
+    "qa-validator",
+    "deployer",
+    "tester",
+    "document-analyzer",
+    "official-docs-researcher",
+    "context-curator",
+    "phase-controller",
+    "evidence-reporter",
+    "git-manager"
+  ]
+}

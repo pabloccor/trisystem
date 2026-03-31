@@ -32,6 +32,9 @@
   "provider": {
     "github-copilot": {}
   },
+  // Global fallback model. Per-agent model: fields (stamped by init-project.sh
+  // based on the chosen cost tier) take precedence over this value.
+  // See shared/models/tiers.json and docs/model-tiers.md for the full tier matrix.
   "model": "github-copilot/claude-sonnet-4.6",
   "small_model": "github-copilot/claude-haiku-4.5",
 
