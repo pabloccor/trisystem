@@ -1,10 +1,9 @@
 ---
-description: Explain the project structure
+description: Explain what this project is about
 agent: explore
 ---
 
-Project layout: !`find . -type f -name "*.py" -o -name "*.ts" | grep -v node_modules | grep -v .venv | head -60`
+Repository docs: @README.md @docs/index.md
 
-Package info: @pyproject.toml
-
-Explain the architecture of this project: main components, how they connect, and where to start reading the code.
+Explain what TriSystem is, what problem it solves, the three-doc system, the main components,
+and where to start reading.
